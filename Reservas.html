@@ -6,33 +6,42 @@
 <title>Reservas</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a1a2e;min-height:100vh;font-size:15px}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a1a2e;min-height:100vh;font-size:16px}
 :root{--ink:#1a1a2e;--ink2:#4a4a6a;--ink3:#8888aa;--card:#fff;--surface:#f0f0f5;--accent:#2563eb;--accent2:#1d4ed8;--ok:#059669;--warn:#d97706;--danger:#dc2626;--border:#e0e0ee;--r:12px}
 
-/* TOPBAR */
 .topbar{background:var(--card);border-bottom:.5px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;gap:10px}
-.brand{font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.3px}
+.brand{font-size:18px;font-weight:700;color:var(--ink)}
 .topbar-right{display:flex;align-items:center;gap:10px}
-.session-btn{background:none;border:.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;color:var(--ink2);font-family:inherit;display:flex;align-items:center;gap:5px}
+.session-btn{background:none;border:.5px solid var(--border);border-radius:8px;padding:7px 13px;font-size:14px;cursor:pointer;color:var(--ink2);font-family:inherit;display:flex;align-items:center;gap:5px;transition:all .15s}
 .session-btn:hover{background:var(--border)}
 .session-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .sync{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink3)}
-.sdot{width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0}
+.sdot{width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0;transition:background .3s}
 .sdot.ok{background:var(--ok)}.sdot.load{background:var(--warn);animation:blink 1s infinite}.sdot.err{background:var(--danger)}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* MAIN */
-.main{max-width:900px;margin:0 auto;padding:18px 16px}
+.main{max-width:920px;margin:0 auto;padding:18px 16px}
+
+/* PROXIMAS */
+.proximas{background:var(--card);border:.5px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px}
+.prox-list{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+.prox-item{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:9px;padding:10px 13px;cursor:pointer;transition:border .15s;border:.5px solid transparent}
+.prox-item:hover{border-color:#93c5fd}
+.prox-badge{background:var(--accent);color:#fff;border-radius:6px;padding:4px 9px;font-size:13px;font-weight:700;min-width:42px;text-align:center}
+.prox-info{flex:1;min-width:0}
+.prox-nombre{font-size:15px;font-weight:600;color:var(--ink)}
+.prox-meta{font-size:12px;color:var(--ink3);margin-top:2px}
+.prox-dias{font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap}
 
 /* CALENDAR */
 .cal-wrap{background:var(--card);border:.5px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:16px}
 .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.cal-title{font-size:17px;font-weight:700;color:var(--ink)}
+.cal-title{font-size:18px;font-weight:700;color:var(--ink)}
 .cal-arrows{display:flex;gap:6px}
-.ca{background:none;border:.5px solid var(--border);border-radius:7px;width:32px;height:32px;cursor:pointer;color:var(--ink2);font-size:17px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.ca{background:none;border:.5px solid var(--border);border-radius:7px;width:32px;height:32px;cursor:pointer;color:var(--ink2);font-size:18px;display:flex;align-items:center;justify-content:center}
 .ca:hover{background:var(--border)}
 .cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
-.clabel{text-align:center;font-size:11px;font-weight:700;color:var(--ink3);padding:4px 0;text-transform:uppercase;letter-spacing:.05em}
+.clabel{text-align:center;font-size:11px;font-weight:700;color:var(--ink3);padding:4px 0;text-transform:uppercase;letter-spacing:.04em}
 .cday{aspect-ratio:1;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:5px 2px;cursor:pointer;border:.5px solid transparent;transition:all .12s;min-height:46px}
 .cday:hover:not(.empty):not(.past){background:#dbeafe;border-color:#93c5fd}
 .cday.today{background:#dbeafe;border-color:var(--accent)}
@@ -45,115 +54,130 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
 .ddots{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;margin-top:3px}
 .ddot{width:5px;height:5px;border-radius:50%}
 
-/* MOBILE CALENDAR */
+/* MOBILE */
 .cal-mobile{display:none}
 .day-row{background:var(--card);border:.5px solid var(--border);border-radius:10px;padding:13px 15px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:border-color .15s}
 .day-row:hover{border-color:#93c5fd}
 .day-row.today-row{border-color:var(--accent);background:#eff6ff}
 .day-row.sel-row{border-color:var(--accent);background:#eff6ff}
 .day-label{font-size:15px;font-weight:600;color:var(--ink)}
-.day-sub{font-size:12px;color:var(--ink3);margin-top:2px}
-.day-dots-row{display:flex;gap:4px;align-items:center}
+.day-sub{font-size:13px;color:var(--ink3);margin-top:2px}
 
 /* DAY PANEL */
 .day-panel{background:var(--card);border:.5px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px}
 .dp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
-.dp-title{font-size:16px;font-weight:700;color:var(--ink)}
+.dp-title{font-size:17px;font-weight:700;color:var(--ink)}
 .dp-sub{font-size:13px;color:var(--ink3);margin-top:2px}
 
-/* HAB STATUS */
-.hab-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:16px}
-.hab-chip{border-radius:9px;padding:10px 12px;font-size:13px;font-weight:600;text-align:center;border:.5px solid transparent}
+/* HABITACIONES */
+.hab-section{margin-bottom:16px}
+.hab-group{margin-bottom:12px}
+.hab-group-title{font-size:12px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px}
+.hab-grid{display:flex;flex-wrap:wrap;gap:7px}
+.hab-chip{border-radius:9px;padding:8px 12px;font-size:14px;font-weight:600;border:.5px solid transparent;cursor:default;text-align:center;transition:transform .1s}
+.hab-chip[style*="pointer"]:hover{transform:scale(1.05)}
 .hab-free{background:#f0fdf4;border-color:#86efac;color:#166534}
 .hab-occ{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
-.hab-num{font-size:16px;font-weight:700;margin-bottom:2px}
-.hab-tipo{font-size:11px;opacity:.8}
 
 /* RES LIST */
 .rlist{display:flex;flex-direction:column;gap:9px}
 .rc{background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:13px 15px;display:flex;align-items:flex-start;gap:11px;transition:border-color .15s}
 .rc.editable{cursor:pointer}.rc.editable:hover{border-color:#93c5fd}
-.rbadge{background:var(--accent);color:#fff;border-radius:7px;padding:5px 10px;font-size:13px;font-weight:700;min-width:42px;text-align:center;white-space:nowrap;flex-shrink:0}
+.rbadge{background:var(--accent);color:#fff;border-radius:7px;padding:5px 10px;font-size:14px;font-weight:700;min-width:42px;text-align:center;white-space:nowrap;flex-shrink:0}
 .ri{flex:1;min-width:0}
 .rn{font-size:15px;font-weight:600;color:var(--ink)}
-.rm{font-size:13px;color:var(--ink3);margin-top:3px;line-height:1.5}
-.rc-actions{display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0}
-.dep-badge{font-size:11px;padding:3px 8px;border-radius:20px;font-weight:600;white-space:nowrap}
-.dep-si{background:#d1fae5;color:#065f46}.dep-no{background:#fee2e2;color:#991b1b}
+.rm{font-size:13px;color:var(--ink3);margin-top:3px;line-height:1.6}
+.saldo-badge{font-size:12px;padding:3px 9px;border-radius:20px;font-weight:600;white-space:nowrap;margin-top:5px;display:inline-block}
+.saldo-ok{background:#d1fae5;color:#065f46}
+.saldo-pen{background:#fef3c7;color:#92400e}
+.saldo-no{background:#fee2e2;color:#991b1b}
 
 /* BUTTONS */
-.bp{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:background .15s}
+.bp{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 17px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:background .15s}
 .bp:hover{background:var(--accent2)}
-.bs{background:none;border:.5px solid var(--border);color:var(--ink2);border-radius:8px;padding:9px 14px;font-size:14px;cursor:pointer;font-family:inherit}
+.bs{background:none;border:.5px solid var(--border);color:var(--ink2);border-radius:8px;padding:9px 15px;font-size:15px;cursor:pointer;font-family:inherit}
 .bs:hover{background:var(--border)}
-.bd{background:none;border:.5px solid #fca5a5;color:var(--danger);border-radius:8px;padding:9px 14px;font-size:14px;cursor:pointer;font-family:inherit}
+.bd{background:none;border:.5px solid #fca5a5;color:var(--danger);border-radius:8px;padding:9px 15px;font-size:15px;cursor:pointer;font-family:inherit}
 .bd:hover{background:#fef2f2}
-.bicon{background:none;border:none;cursor:pointer;padding:5px;border-radius:7px;color:var(--ink3);font-size:18px;display:flex;align-items:center;justify-content:center}
-.bicon:hover{background:var(--border);color:var(--ink)}
 
 /* MODAL */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:200;padding:0}
 @media(min-width:600px){.ov{align-items:center;padding:16px}}
-.modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:480px;max-height:95vh;overflow-y:auto;box-shadow:0 -10px 40px rgba(0,0,0,.15)}
+.modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:500px;max-height:95vh;overflow-y:auto;box-shadow:0 -10px 40px rgba(0,0,0,.15)}
 @media(min-width:600px){.modal{border-radius:16px;max-height:92vh}}
 .mhead{padding:16px 18px 13px;border-bottom:.5px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
-.mtitle{font-size:17px;font-weight:700;color:var(--ink)}
+.mtitle{font-size:18px;font-weight:700;color:var(--ink)}
 .msub{font-size:13px;color:var(--ink3);margin-top:2px}
-.xbtn{background:none;border:none;font-size:20px;color:var(--ink3);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:7px;flex-shrink:0}
+.xbtn{background:none;border:none;font-size:22px;color:var(--ink3);cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:7px;flex-shrink:0}
 .xbtn:hover{background:var(--border)}
 .mbody{padding:16px 18px}
 .field{margin-bottom:14px}
-.field label{display:block;font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:5px}
+.field label{display:block;font-size:14px;font-weight:600;color:var(--ink2);margin-bottom:5px}
 .field input,.field select,.field textarea{width:100%;border:.5px solid var(--border);border-radius:9px;padding:10px 12px;font-size:15px;color:var(--ink);background:#fafafa;outline:none;font-family:inherit;transition:border-color .12s}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);background:#fff}
 .field textarea{resize:vertical;min-height:70px}
 .r2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.mfoot{padding:12px 18px 16px;display:flex;gap:8px;justify-content:flex-end;border-top:.5px solid var(--border);position:sticky;bottom:0;background:#fff}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.mfoot{padding:12px 18px 16px;display:flex;gap:8px;justify-content:flex-end;border-top:.5px solid var(--border);position:sticky;bottom:0;background:#fff;flex-wrap:wrap}
 .mfoot .ml{margin-right:auto}
-.foto-preview{width:100%;max-height:180px;object-fit:cover;border-radius:9px;border:.5px solid var(--border);margin-top:8px;display:none}
-.foto-label{display:flex;align-items:center;justify-content:center;gap:7px;border:.5px dashed var(--border);border-radius:9px;padding:14px;cursor:pointer;color:var(--ink3);font-size:14px;transition:all .15s;margin-top:6px}
+
+/* RESUMEN FINANCIERO */
+.fin-box{background:#f8faff;border:.5px solid #bfdbfe;border-radius:10px;padding:13px 15px;margin-bottom:14px}
+.fin-row{display:flex;justify-content:space-between;font-size:14px;padding:4px 0}
+.fin-row.total{font-weight:700;font-size:16px;border-top:.5px solid #bfdbfe;margin-top:6px;padding-top:8px}
+.fin-row.saldo{font-weight:700;color:var(--danger)}
+.fin-row.saldo.ok{color:var(--ok)}
+
+/* FOTO */
+.foto-preview{width:100%;max-height:200px;object-fit:cover;border-radius:9px;border:.5px solid var(--border);margin-top:8px;display:none}
+.foto-label{display:flex;align-items:center;justify-content:center;gap:7px;border:.5px dashed var(--border);border-radius:9px;padding:16px;cursor:pointer;color:var(--ink3);font-size:15px;transition:all .15s;margin-top:6px}
 .foto-label:hover{border-color:var(--accent);color:var(--accent);background:#eff6ff}
+.foto-actions{display:flex;gap:8px;margin-top:8px}
+.foto-btn{font-size:13px;padding:6px 12px;border-radius:7px;border:.5px solid var(--border);background:none;cursor:pointer;color:var(--ink2);font-family:inherit}
+.foto-btn:hover{background:var(--border)}
 
 /* VOUCHER */
-.voucher-wrap{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+.voucher-wrap{background:#fff;border-radius:12px;overflow:hidden;border:.5px solid var(--border)}
 .voucher-head{background:var(--accent);color:#fff;padding:20px 22px;text-align:center}
-.voucher-head h2{font-size:22px;font-weight:700;letter-spacing:.5px}
-.voucher-head p{font-size:13px;opacity:.85;margin-top:4px}
-.voucher-body{padding:20px 22px}
-.v-row{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:.5px solid #f0f0f0;gap:10px}
+.voucher-head h2{font-size:24px;font-weight:700;letter-spacing:.5px}
+.voucher-head p{font-size:14px;opacity:.85;margin-top:4px}
+.voucher-body{padding:18px 22px}
+.v-row{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:.5px solid #f0f0f0;gap:10px}
 .v-row:last-child{border-bottom:none}
 .v-label{font-size:13px;color:#666;font-weight:500;flex-shrink:0}
 .v-val{font-size:14px;color:#1a1a2e;font-weight:600;text-align:right}
+.v-saldo{font-size:15px;font-weight:700;color:var(--danger)}
+.v-saldo.ok{color:var(--ok)}
 .voucher-foto{width:100%;border-radius:9px;margin-top:12px;border:.5px solid #e0e0e0}
-.voucher-foot{background:#f8f8fc;padding:14px 22px;text-align:center;font-size:12px;color:#999}
+.voucher-foot{background:#f8f8fc;padding:13px 22px;text-align:center;font-size:12px;color:#999}
 .share-actions{display:flex;gap:8px;margin-top:14px;justify-content:center;flex-wrap:wrap}
-.btn-wa{background:#25d366;color:#fff;border:none;border-radius:9px;padding:11px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:7px}
+.btn-wa{background:#25d366;color:#fff;border:none;border-radius:9px;padding:11px 20px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:7px}
 .btn-wa:hover{background:#128c7e}
-.btn-dl{background:var(--accent);color:#fff;border:none;border-radius:9px;padding:11px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-dl{background:var(--accent);color:#fff;border:none;border-radius:9px;padding:11px 16px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
 
-/* LOGIN MODAL */
+/* LOGIN */
 .login-box{background:#fff;border-radius:16px;width:100%;max-width:340px;padding:28px 24px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
-.login-icon{font-size:36px;margin-bottom:10px}
-.login-title{font-size:18px;font-weight:700;margin-bottom:4px}
-.login-sub{font-size:13px;color:var(--ink3);margin-bottom:20px}
+.login-icon{font-size:38px;margin-bottom:10px}
+.login-title{font-size:19px;font-weight:700;margin-bottom:4px}
+.login-sub{font-size:14px;color:var(--ink3);margin-bottom:20px}
 .login-err{color:var(--danger);font-size:13px;margin-top:8px;min-height:18px}
 
 /* CONFIG */
-.cfg-wrap{background:var(--card);border:.5px solid var(--border);border-radius:var(--r);padding:18px;max-width:400px;margin:0 auto}
+.cfg-wrap{background:var(--card);border:.5px solid var(--border);border-radius:var(--r);padding:20px;max-width:420px;margin:0 auto}
 
-/* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:11px 20px;border-radius:9px;font-size:14px;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
 .toast.show{opacity:1}
-
-.empty{text-align:center;padding:22px;color:var(--ink3);font-size:14px}
-.section-label{font-size:12px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.empty{text-align:center;padding:22px;color:var(--ink3);font-size:15px}
+.section-label{font-size:13px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.sep{border:none;border-top:.5px solid var(--border);margin:16px 0}
 
 @media(max-width:599px){
   .cal-desktop{display:none}
   .cal-mobile{display:block}
   .r2{grid-template-columns:1fr}
-  .topbar{padding:10px 14px}
-  .main{padding:12px 12px}
+  .r3{grid-template-columns:1fr}
+  .topbar{padding:10px 13px}
+  .main{padding:12px 11px}
 }
 </style>
 </head>
@@ -163,19 +187,29 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
   <div class="brand">📋 Reservas</div>
   <div class="topbar-right">
     <div class="sync"><div class="sdot" id="sd"></div><span id="sl">Conectando…</span></div>
+    <button class="session-btn edit-only" id="cfg-btn" onclick="showCfg()" style="display:none">⚙️</button>
     <button class="session-btn" id="session-btn" onclick="toggleSession()">🔒 Ingresar</button>
   </div>
 </div>
 
 <div class="main">
 
+  <!-- PRÓXIMAS RESERVAS -->
+  <div class="proximas" id="proximas-wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div class="section-label" style="margin:0">Próximas reservas</div>
+      <span style="font-size:13px;color:var(--ink3)" id="prox-count"></span>
+    </div>
+    <div class="prox-list" id="prox-list"></div>
+  </div>
+
   <!-- DESKTOP CALENDAR -->
   <div class="cal-wrap cal-desktop">
     <div class="cal-nav">
       <span class="cal-title" id="cal-title"></span>
       <div class="cal-arrows">
-        <button class="ca" onclick="cm(-1)">‹</button>
-        <button class="ca" onclick="cm(1)">›</button>
+        <button class="ca" onclick="changeMonth(-1)">‹</button>
+        <button class="ca" onclick="changeMonth(1)">›</button>
       </div>
     </div>
     <div class="cgrid" id="cgrid"></div>
@@ -184,10 +218,10 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
   <!-- MOBILE CALENDAR -->
   <div class="cal-mobile">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <span style="font-size:17px;font-weight:700" id="cal-title-m"></span>
+      <span style="font-size:18px;font-weight:700" id="cal-title-m"></span>
       <div style="display:flex;gap:6px">
-        <button class="ca" onclick="cm(-1)">‹</button>
-        <button class="ca" onclick="cm(1)">›</button>
+        <button class="ca" onclick="changeMonth(-1)">‹</button>
+        <button class="ca" onclick="changeMonth(1)">›</button>
       </div>
     </div>
     <div id="mobile-days"></div>
@@ -203,22 +237,25 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
         </div>
         <button class="bp edit-only" id="btn-nueva" onclick="oRes()" style="display:none">+ Nueva reserva</button>
       </div>
-      <div class="section-label">Habitaciones</div>
-      <div class="hab-grid" id="hab-grid"></div>
-      <div class="section-label" style="margin-top:14px">Reservas del día</div>
+      <div class="hab-section">
+        <div class="section-label">Estado de habitaciones</div>
+        <div id="hab-grupos"></div>
+      </div>
+      <hr class="sep">
+      <div class="section-label">Reservas del día</div>
       <div class="rlist" id="day-rlist"></div>
     </div>
   </div>
 
-  <!-- CONFIG (hidden) -->
+  <!-- CONFIG -->
   <div id="cfg-panel" style="display:none">
     <div class="cfg-wrap">
-      <div style="font-size:17px;font-weight:700;margin-bottom:16px">⚙️ Configuración</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:16px">⚙️ Cambiar contraseña</div>
       <div class="field"><label>Contraseña actual</label><input type="password" id="cfg-old" placeholder="••••••"></div>
       <div class="field"><label>Nueva contraseña</label><input type="password" id="cfg-new" placeholder="••••••"></div>
       <div class="field"><label>Confirmar nueva contraseña</label><input type="password" id="cfg-new2" placeholder="••••••"></div>
-      <div style="display:flex;gap:8px;margin-top:4px">
-        <button class="bp" onclick="changePass()">Guardar cambios</button>
+      <div style="display:flex;gap:8px">
+        <button class="bp" onclick="changePass()">Guardar</button>
         <button class="bs" onclick="hideCfg()">Cancelar</button>
       </div>
     </div>
@@ -234,56 +271,105 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
     <button class="xbtn" onclick="cm2('mres')">✕</button>
   </div>
   <div class="mbody">
+
     <div class="field">
       <label>Habitación</label>
-      <select id="f-hab" onchange="updateTarifa()"></select>
+      <select id="f-hab" onchange="onHabChange()"></select>
     </div>
+    <div id="grupo-info" style="display:none;background:#eff6ff;border:.5px solid #bfdbfe;border-radius:9px;padding:10px 13px;margin-bottom:14px;font-size:13px;color:var(--accent2)"></div>
+
+    <div class="r2">
+      <div class="field">
+        <label>Fecha de llegada</label>
+        <input type="date" id="f-llegada" onchange="calcFinanciero()">
+      </div>
+      <div class="field">
+        <label>Fecha de salida</label>
+        <input type="date" id="f-salida" onchange="calcFinanciero()">
+      </div>
+    </div>
+
     <div class="field">
-      <label>Tarifa (S/) — editable</label>
-      <input type="number" id="f-tarifa" placeholder="0.00" min="0" step="0.5">
+      <label>Fecha de reserva</label>
+      <input type="date" id="f-fechares">
     </div>
+
+    <div class="field">
+      <label>Hora de llegada estimada</label>
+      <input type="time" id="f-hora" placeholder="14:00">
+    </div>
+
     <div class="field">
       <label>Nombre del huésped</label>
       <input type="text" id="f-nombre" placeholder="Nombre completo">
     </div>
+
     <div class="field">
       <label>Número de contacto</label>
       <input type="tel" id="f-contacto" placeholder="Teléfono o WhatsApp">
     </div>
-    <div class="field">
-      <label>Fecha de llegada</label>
-      <input type="date" id="f-llegada">
-    </div>
+
     <div class="field">
       <label>Quién atendió</label>
       <input type="text" id="f-atencion" placeholder="Nombre de quien registra">
     </div>
+
+    <!-- FINANCIERO -->
+    <div class="fin-box" id="fin-box">
+      <div class="fin-row"><span>Tarifa por noche (S/)</span><input type="number" id="f-tarifa" style="width:90px;border:.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:14px;text-align:right" onchange="calcFinanciero()" min="0" step="0.5"></div>
+      <div class="fin-row"><span>Noches</span><span id="fin-noches" style="font-weight:600">0</span></div>
+      <div class="fin-row total"><span>Total estimado</span><span id="fin-total">S/ 0.00</span></div>
+    </div>
+
+    <!-- DEPÓSITO -->
     <div style="border:.5px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">
-      <div style="font-size:14px;font-weight:600;color:var(--ink2);margin-bottom:10px">Depósito</div>
+      <div style="font-size:15px;font-weight:600;color:var(--ink2);margin-bottom:12px">Depósito</div>
       <div class="r2">
         <div class="field" style="margin:0">
           <label>Monto (S/)</label>
-          <input type="number" id="f-dep-monto" placeholder="0.00" min="0" step="0.5">
+          <input type="number" id="f-dep-monto" placeholder="0.00" min="0" step="0.5" onchange="calcSaldo()">
         </div>
         <div class="field" style="margin:0">
           <label>Fecha del depósito</label>
           <input type="date" id="f-dep-fecha">
         </div>
       </div>
-      <div class="field" style="margin-top:10px;margin-bottom:0">
-        <label>Captura / foto del pago</label>
-        <input type="file" id="f-dep-foto" accept="image/*" style="display:none" onchange="previewFoto(this)">
-        <label for="f-dep-foto" class="foto-label" id="foto-label">📷 Tocar para adjuntar imagen</label>
-        <img id="foto-preview" class="foto-preview">
+      <div class="field" style="margin-top:12px;margin-bottom:0">
+        <label>Tipo de depósito</label>
+        <select id="f-dep-tipo">
+          <option value="">Sin depósito</option>
+          <option value="Efectivo">Efectivo</option>
+          <option value="YAPE">YAPE</option>
+          <option value="Cuenta BCP">Cuenta BCP</option>
+          <option value="otro">Otro (escribir)</option>
+        </select>
+      </div>
+      <div class="field" id="dep-otro-field" style="display:none;margin-top:10px;margin-bottom:0">
+        <label>Especificar tipo</label>
+        <input type="text" id="f-dep-otro" placeholder="Método de pago…">
+      </div>
+      <div class="field" style="margin-top:12px;margin-bottom:0">
+        <label>Capturas / fotos del depósito</label>
+        <div id="fotos-grid" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px"></div>
+        <input type="file" id="f-dep-foto" accept="image/*" capture="environment" style="display:none" onchange="addFoto(this)">
+        <label for="f-dep-foto" class="foto-label" id="foto-label">📷 Agregar foto (puedes agregar varias)</label>
       </div>
     </div>
+
+    <!-- SALDO -->
+    <div class="fin-box" id="saldo-box">
+      <div class="fin-row saldo" id="saldo-row"><span>Saldo pendiente</span><span id="fin-saldo">S/ 0.00</span></div>
+    </div>
+
     <div class="field">
       <label>Notas (opcional)</label>
       <textarea id="f-notas" placeholder="Observaciones adicionales…"></textarea>
     </div>
+
   </div>
   <div class="mfoot">
-    <div class="ml"><button class="bd" id="res-del-btn" style="display:none" onclick="delRes()">Eliminar</button></div>
+    <div class="ml"><button class="bd" id="res-del-btn" style="display:none" onclick="delRes()">Eliminar reserva</button></div>
+    <button class="bs" id="btn-otra-hab" onclick="guardarYAgregarOtra()" style="display:none">+ Otra habitación (mismo huésped)</button>
     <button class="bs" onclick="cm2('mres')">Cancelar</button>
     <button class="bp" onclick="sRes()">Guardar reserva</button>
   </div>
@@ -300,9 +386,9 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
   <div class="mbody">
     <div id="voucher-content"></div>
     <div class="share-actions">
-      <button class="btn-wa" onclick="shareWA()">📲 Compartir WhatsApp</button>
-      <button class="btn-dl" onclick="downloadImg()">⬇ Descargar imagen</button>
-      <button class="bp edit-only" id="ver-edit-btn" onclick="editFromVer()" style="display:none;background:#6b7280">✏️ Editar</button>
+      <button class="btn-wa" onclick="shareWA()">📲 WhatsApp</button>
+      <button class="btn-dl" onclick="downloadImg()">⬇ Descargar</button>
+      <button class="bp edit-only" id="ver-edit-btn" onclick="editFromVer()" style="display:none;background:#6b7280;font-size:14px;padding:9px 13px">✏️ Editar</button>
     </div>
   </div>
 </div>
@@ -313,9 +399,9 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
 <div class="login-box">
   <div class="login-icon">🔐</div>
   <div class="login-title">Acceso de edición</div>
-  <div class="login-sub">Ingresá la contraseña para poder editar</div>
+  <div class="login-sub">Ingresa la contraseña para editar</div>
   <div class="field"><input type="password" id="login-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()"></div>
-  <button class="bp" style="width:100%;justify-content:center" onclick="doLogin()">Ingresar</button>
+  <button class="bp" style="width:100%;justify-content:center;font-size:15px" onclick="doLogin()">Ingresar</button>
   <div class="login-err" id="login-err"></div>
 </div>
 </div>
@@ -324,16 +410,15 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-// ============ CONFIG ============
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVeboE98y29q2mOlpKd8-AnHQ1RQty9U_yxgyBcUnmbcF_2fLmbKBLruSSUdfgNxJr/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw58FsApZOiov8oz_JX5sxdiKulvWYow8p_MZtziQZxZJlyXraxW8cqf15oK7JPfJ6C/exec';
 
-const HABITACIONES = [
+const HABS = [
   {num:'201',tipo:'Matrimonial',tarifa:75},{num:'202',tipo:'Matrimonial',tarifa:75},
   {num:'204',tipo:'Matrimonial',tarifa:75},{num:'205',tipo:'Matrimonial',tarifa:75},
   {num:'206',tipo:'Matrimonial',tarifa:75},{num:'207',tipo:'Matrimonial',tarifa:75},
   {num:'208',tipo:'Matrimonial',tarifa:75},{num:'209',tipo:'Matrimonial',tarifa:75},
-  {num:'306',tipo:'Matrimonial',tarifa:75},{num:'307',tipo:'Matrimonial',tarifa:75},
-  {num:'305',tipo:'Matrimonial',tarifa:75},
+  {num:'305',tipo:'Matrimonial',tarifa:75},{num:'306',tipo:'Matrimonial',tarifa:75},
+  {num:'307',tipo:'Matrimonial',tarifa:75},
   {num:'310',tipo:'Matrimonial c/ baño privado',tarifa:65},
   {num:'308',tipo:'Matrimonial c/ baño compartido',tarifa:45},
   {num:'311',tipo:'Matrimonial c/ baño compartido',tarifa:45},
@@ -346,25 +431,41 @@ const HABITACIONES = [
   {num:'309',tipo:'Individual c/ baño compartido',tarifa:35},
 ];
 
+const HAB_GRUPOS = [
+  {label:'Matrimonial', tipos:['Matrimonial']},
+  {label:'Matrimonial c/ baño privado', tipos:['Matrimonial c/ baño privado']},
+  {label:'Matrimonial c/ baño compartido', tipos:['Matrimonial c/ baño compartido']},
+  {label:'Triple', tipos:['Triple']},
+  {label:'Doble', tipos:['Doble']},
+  {label:'Individual', tipos:['Individual sin ducha','Individual c/ baño compartido']},
+];
+
 const MONTHS=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DAYS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
-let reservas=[];
-let cMonth=new Date().getMonth(), cYear=new Date().getFullYear();
+let reservas=[], cMonth=new Date().getMonth(), cYear=new Date().getFullYear();
 let selDay=null, editResId=null, verResId=null;
-let isLoggedIn=false, failCount=0, syncTmr=null;
-let fotoBase64=null;
-
+let isLoggedIn=false, failCount=0, syncTmr=null, fotosArray=[];
 const today=toStr(new Date());
 
 function pad(n){return String(n).padStart(2,'0')}
 function toStr(d){return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
-function fmt(s){if(!s)return'—';const[y,m,d]=s.split('-');return`${d}/${m}/${y}`}
+function fmt(s){
+  if(!s)return'—';
+  try{
+    const clean=String(s).substring(0,10);
+    const parts=clean.split('-');
+    if(parts.length!==3)return'—';
+    return parts[2]+'/'+parts[1]+'/'+parts[0];
+  }catch{return'—'}
+}
+function fmtHora(h){if(!h)return'—';return h}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2)}
+function nights(a,b){return a&&b?Math.max(0,Math.round((new Date(b)-new Date(a))/86400000)):0}
 
-// ============ SESSION ============
+// SESSION
 function initSession(){
-  isLoggedIn = localStorage.getItem('hotel_session')==='1';
+  isLoggedIn=localStorage.getItem('hr_session')==='1';
   updateSessionUI();
 }
 
@@ -380,16 +481,18 @@ function updateSessionUI(){
   document.querySelectorAll('.edit-only').forEach(el=>{
     el.style.display=isLoggedIn?'':'none';
   });
-  if(isLoggedIn && document.getElementById('btn-nueva')){
-    document.getElementById('btn-nueva').style.display='';
-  }
+  if(document.getElementById('btn-nueva'))
+    document.getElementById('btn-nueva').style.display=isLoggedIn?'':'none';
+  if(document.getElementById('ver-edit-btn'))
+    document.getElementById('ver-edit-btn').style.display=isLoggedIn?'':'none';
+  renderAll();
 }
 
 function toggleSession(){
   if(isLoggedIn){
     if(confirm('¿Cerrar sesión?')){
       isLoggedIn=false;
-      localStorage.removeItem('hotel_session');
+      localStorage.removeItem('hr_session');
       updateSessionUI();
       hideCfg();
       toast('Sesión cerrada');
@@ -402,66 +505,73 @@ function toggleSession(){
   }
 }
 
+function hashSimple(str){
+  let h=0;for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0}
+  return Math.abs(h).toString(16);
+}
+
 async function doLogin(){
-  if(failCount>=5){toast('Demasiados intentos. Recargá la página.');return}
+  if(failCount>=5){toast('Demasiados intentos. Recarga la página.');return}
   const pass=document.getElementById('login-pass').value;
-  if(!pass){return}
+  if(!pass) return;
   ss('load','Verificando…');
-  const ok=await apiP({action:'verificarPass',pass:hashSimple(pass)});
-  if(ok?.ok){
-    isLoggedIn=true;
-    localStorage.setItem('hotel_session','1');
-    failCount=0;
-    cm2('mlogin');
-    updateSessionUI();
-    ss('ok','Conectado');
-    toast('Sesión iniciada ✓');
-  } else {
-    failCount++;
-    const restantes=5-failCount;
-    document.getElementById('login-err').textContent=
-      restantes>0?`Contraseña incorrecta. ${restantes} intento${restantes!==1?'s':''} restante${restantes!==1?'s':''}.`:'Cuenta bloqueada. Recargá la página.';
-    ss('ok','Conectado');
+  try{
+    const ok=await apiP({action:'verificarPass',pass:hashSimple(pass)});
+    if(ok&&ok.ok){
+      isLoggedIn=true;
+      localStorage.setItem('hr_session','1');
+      failCount=0;
+      cm2('mlogin');
+      updateSessionUI();
+      ss('ok','Conectado');
+      toast('Sesión iniciada ✓');
+    } else {
+      failCount++;
+      const r=5-failCount;
+      document.getElementById('login-err').textContent=r>0?`Contraseña incorrecta. ${r} intento${r!==1?'s':''} restante${r!==1?'s':''}.`:'Bloqueado. Recarga la página.';
+      ss('ok','Conectado');
+    }
+  }catch{
+    ss('err','Sin conexión');
+    toast('Error de conexión');
   }
 }
 
-function hashSimple(str){
-  let hash=0;
-  for(let i=0;i<str.length;i++){hash=((hash<<5)-hash)+str.charCodeAt(i);hash|=0}
-  return Math.abs(hash).toString(16);
-}
-
-// ============ SYNC ============
+// SYNC
 function ss(st,lbl){
   const d=document.getElementById('sd'),l=document.getElementById('sl');
   if(d)d.className='sdot '+st;if(l)l.textContent=lbl;
 }
 
 async function apiG(a){
-  try{const r=await fetch(`${SCRIPT_URL}?action=${a}`);return await r.json()}
-  catch{return null}
+  const r=await fetch(`${SCRIPT_URL}?action=${a}&t=${Date.now()}`);
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  return r.json();
 }
 
 async function apiP(b){
-  try{const r=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(b)});return await r.json()}
-  catch{return null}
+  const r=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(b),headers:{'Content-Type':'text/plain'}});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  return r.json();
 }
 
 async function loadAll(){
   ss('load','Sincronizando…');
-  const raw=await apiG('getReservas');
-  if(!raw){
-    ss('err','Sin conexión — datos locales');
+  try{
+    const raw=await apiG('getReservas');
+    reservas=(raw||[]).filter(r=>r[0]&&r[0]!=='id').map(r=>({
+      id:r[0],hab:r[1],tipo:r[2],tarifa:parseFloat(r[3])||0,
+      nombre:r[4],contacto:r[5],llegada:r[6],salida:r[7],
+      fechares:r[8],hora:r[9],atencion:r[10],
+      depMonto:r[11],depFecha:r[12],depTipo:r[13],depFoto:r[14],notas:r[15],
+      grupoId:r[16]||''
+    }));
+    localStorage.setItem('hr_reservas',JSON.stringify(reservas));
+    ss('ok',`Sync ${new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'})}`);
+  }catch(e){
+    ss('err','Sin conexión');
     reservas=JSON.parse(localStorage.getItem('hr_reservas')||'[]');
-    renderAll();return;
   }
-  reservas=(raw||[]).filter(r=>r[0]&&r[0]!=='id').map(r=>({
-    id:r[0],hab:r[1],tipo:r[2],tarifa:r[3],nombre:r[4],
-    contacto:r[5],llegada:r[6],atencion:r[7],
-    depMonto:r[8],depFecha:r[9],depFoto:r[10],notas:r[11]
-  }));
-  localStorage.setItem('hr_reservas',JSON.stringify(reservas));
-  ss('ok',`Sync ${new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'})}`);
   renderAll();
 }
 
@@ -471,12 +581,44 @@ function startSync(){
 }
 
 function renderAll(){
+  renderProximas();
   renderCal();
   renderCalMobile();
   if(selDay)renderDayPanel(selDay);
 }
 
-// ============ CALENDAR ============
+// PRÓXIMAS
+function renderProximas(){
+  const hoy=new Date();
+  const en7=new Date(hoy);en7.setDate(en7.getDate()+7);
+  const en7str=toStr(en7);
+  const proximas=reservas
+    .filter(r=>r.llegada>=today&&r.llegada<=en7str)
+    .sort((a,b)=>a.llegada.localeCompare(b.llegada))
+    .slice(0,10);
+  document.getElementById('prox-count').textContent=`${proximas.length} en los próximos 7 días`;
+  const list=document.getElementById('prox-list');
+  if(!proximas.length){
+    list.innerHTML=`<div class="empty" style="padding:12px">Sin reservas próximas</div>`;
+    return;
+  }
+  list.innerHTML=proximas.map(r=>{
+    const d=Math.round((new Date(r.llegada)-hoy)/86400000);
+    const dias=d===0?'Hoy':d===1?'Mañana':`En ${d} días`;
+    const n=nights(r.llegada,r.salida);
+    const nombreShow=isLoggedIn?(r.nombre||'Sin nombre'):r.tipo;
+    return`<div class="prox-item" onclick="verRes('${r.id}')">
+      <div class="prox-badge">${r.hab}</div>
+      <div class="prox-info">
+        <div class="prox-nombre">${nombreShow}</div>
+        <div class="prox-meta">${fmt(r.llegada)}${r.salida?' → '+fmt(r.salida):''} · ${n>0?n+' noche'+(n!==1?'s':''):''}${isLoggedIn&&r.hora?' · '+r.hora:''}</div>
+      </div>
+      <div class="prox-dias">${dias}</div>
+    </div>`;
+  }).join('');
+}
+
+// CALENDAR
 function renderCal(){
   const t=document.getElementById('cal-title');
   if(t)t.textContent=`${MONTHS[cMonth]} ${cYear}`;
@@ -507,23 +649,24 @@ function renderCalMobile(){
     const ds=`${cYear}-${pad(cMonth+1)}-${pad(d)}`;
     const dr=resDelDia(ds);
     const past=ds<today;
-    const dayName=DAYS[new Date(ds).getDay()];
-    const isToday=ds===today;
-    const isSel=ds===selDay;
-    if(past&&!isToday)continue;
+    if(past&&ds!==today)continue;
+    const dayName=DAYS[new Date(ds+'T12:00:00').getDay()];
+    const isToday=ds===today;const isSel=ds===selDay;
     html+=`<div class="day-row${isToday?' today-row':''}${isSel?' sel-row':''}" onclick="selectDay('${ds}')">
       <div>
         <div class="day-label">${dayName} ${d} ${MONTHS[cMonth].slice(0,3)}</div>
         <div class="day-sub">${dr.length?`${dr.length} reserva${dr.length!==1?'s':''}`:'Sin reservas'}</div>
       </div>
-      <div class="day-dots-row">${dr.slice(0,5).map(()=>`<div class="ddot" style="background:var(--accent);width:8px;height:8px"></div>`).join('')}
-      <span style="color:var(--ink3);font-size:18px">›</span></div>
+      <div style="display:flex;gap:4px;align-items:center">
+        ${dr.slice(0,4).map(()=>`<div style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></div>`).join('')}
+        <span style="color:var(--ink3);font-size:20px;margin-left:4px">›</span>
+      </div>
     </div>`;
   }
-  cont.innerHTML=html||`<div class="empty">No hay días disponibles este mes</div>`;
+  cont.innerHTML=html||`<div class="empty">No hay días este mes</div>`;
 }
 
-function cm(d){
+function changeMonth(d){
   cMonth+=d;
   if(cMonth>11){cMonth=0;cYear++}
   if(cMonth<0){cMonth=11;cYear--}
@@ -533,79 +676,190 @@ function cm(d){
 }
 
 function selectDay(ds){
-  selDay=ds;
-  renderCal();renderCalMobile();
+  selDay=ds;renderCal();renderCalMobile();
   renderDayPanel(ds);
   document.getElementById('day-panel').style.display='';
-  document.getElementById('day-panel').scrollIntoView({behavior:'smooth',block:'nearest'});
+  setTimeout(()=>document.getElementById('day-panel').scrollIntoView({behavior:'smooth',block:'nearest'}),50);
 }
 
 function resDelDia(ds){
-  return reservas.filter(r=>r.llegada===ds);
+  return reservas.filter(r=>{
+    if(!r.llegada)return false;
+    const salida=r.salida||r.llegada;
+    return r.llegada<=ds&&salida>=ds;
+  });
 }
 
-// ============ DAY PANEL ============
+// DAY PANEL
 function renderDayPanel(ds){
   const[y,m,d]=ds.split('-');
   const label=`${parseInt(d)} de ${MONTHS[parseInt(m)-1]} ${y}`;
   const dr=resDelDia(ds);
-  const habsOcupadas=new Set(dr.map(r=>r.hab));
-
+  const habsOcc=new Set(dr.map(r=>r.hab));
   document.getElementById('dp-title').textContent=label;
-  document.getElementById('dp-sub').textContent=`${dr.length} reserva${dr.length!==1?'s':''} · ${HABITACIONES.length-habsOcupadas.size} habitaciones disponibles`;
+  document.getElementById('dp-sub').textContent=`${dr.length} reserva${dr.length!==1?'s':`s`} · ${HABS.length-habsOcc.size} habitaciones libres`;
+  if(isLoggedIn)document.getElementById('btn-nueva').style.display='';
 
-  if(isLoggedIn){
-    document.getElementById('btn-nueva').style.display='';
-  }
-
-  // Hab grid
-  const hgrid=document.getElementById('hab-grid');
-  hgrid.innerHTML=HABITACIONES.map(h=>{
-    const occ=habsOcupadas.has(h.num);
-    return`<div class="hab-chip ${occ?'hab-occ':'hab-free'}">
-      <div class="hab-num">${h.num}</div>
-      <div class="hab-tipo">${occ?'Ocupada':'Libre'}</div>
+  // Hab grupos
+  const hg=document.getElementById('hab-grupos');
+  hg.innerHTML=HAB_GRUPOS.map(g=>{
+    const habsDelGrupo=HABS.filter(h=>g.tipos.includes(h.tipo));
+    if(!habsDelGrupo.length)return'';
+    return`<div class="hab-group">
+      <div class="hab-group-title">${g.label}</div>
+      <div class="hab-grid">${habsDelGrupo.map(h=>{
+        const occ=habsOcc.has(h.num);
+        const resOcc=dr.find(r=>r.hab===h.num);
+        if(occ&&resOcc){
+          return`<div class="hab-chip hab-occ" style="cursor:pointer" onclick="verRes('${resOcc.id}')" title="Ver reserva">${h.num}<div class="hab-tipo">Ocupada</div></div>`;
+        }
+        if(isLoggedIn){
+          return`<div class="hab-chip hab-free" style="cursor:pointer" onclick="oResHab('${h.num}')" title="Reservar ${h.num}">
+            ${h.num}<div class="hab-tipo">+ Reservar</div></div>`;
+        }
+        return`<div class="hab-chip hab-free">${h.num}<div class="hab-tipo">Libre</div></div>`;
+      }).join('')}</div>
     </div>`;
   }).join('');
 
   // Res list
   const rl=document.getElementById('day-rlist');
   if(!dr.length){rl.innerHTML=`<div class="empty">Sin reservas para este día</div>`;return}
-  rl.innerHTML=dr.map(r=>`
-    <div class="rc${isLoggedIn?' editable':''}" onclick="verRes('${r.id}')">
+  rl.innerHTML=dr.map(r=>{
+    const n=nights(r.llegada,r.salida);
+    if(!isLoggedIn){
+      return`<div class="rc" onclick="verRes('${r.id}')">
+        <div class="rbadge">${r.hab}</div>
+        <div class="ri">
+          <div class="rn">${r.tipo}</div>
+          <div class="rm">${fmt(r.llegada)}${r.salida?' → '+fmt(r.salida):''} · ${n} noche${n!==1?'s':''}</div>
+          <span class="saldo-badge" style="background:#f3f4f6;color:#6b7280">Ocupada</span>
+        </div>
+      </div>`;
+    }
+    const total=r.tarifa*n;
+    const dep=parseFloat(r.depMonto)||0;
+    const saldo=total-dep;
+    const saldoClass=saldo<=0?'saldo-ok':dep>0?'saldo-pen':'saldo-no';
+    const saldoLabel=saldo<=0?'Pagado':dep>0?`Saldo S/ ${saldo.toFixed(2)}`:'Sin depósito';
+    return`<div class="rc editable" onclick="verRes('${r.id}')">
       <div class="rbadge">${r.hab}</div>
       <div class="ri">
         <div class="rn">${r.nombre||'Sin nombre'}</div>
-        <div class="rm">${r.tipo} · S/ ${r.tarifa} · 📞 ${r.contacto||'—'}<br>Atendió: ${r.atencion||'—'}</div>
+        <div class="rm">${r.tipo} · S/ ${r.tarifa}/noche · ${n} noche${n!==1?'s':''}<br>
+        ${fmt(r.llegada)}${r.salida?' → '+fmt(r.salida):''} · ${r.hora?'🕐 '+r.hora:''}<br>
+        📞 ${r.contacto||'—'} · Atendió: ${r.atencion||'—'}</div>
+        <span class="saldo-badge ${saldoClass}">${saldoLabel}</span>
       </div>
-      <div class="rc-actions">
-        <span class="dep-badge ${r.depMonto?'dep-si':'dep-no'}">${r.depMonto?`S/ ${r.depMonto}`:'Sin depósito'}</span>
-      </div>
+    </div>`;
+  }).join('');
+}
+
+// FINANCIERO
+function onHabChange(){
+  const sel=document.getElementById('f-hab');
+  const hab=HABS.find(h=>h.num===sel.value);
+  if(hab)document.getElementById('f-tarifa').value=hab.tarifa;
+  calcFinanciero();
+}
+
+function calcFinanciero(){
+  const llegada=document.getElementById('f-llegada').value;
+  const salida=document.getElementById('f-salida').value;
+  const tarifa=parseFloat(document.getElementById('f-tarifa').value)||0;
+  const n=nights(llegada,salida);
+  const total=tarifa*n;
+  document.getElementById('fin-noches').textContent=n;
+  document.getElementById('fin-total').textContent=`S/ ${total.toFixed(2)}`;
+  calcSaldo();
+}
+
+function calcSaldo(){
+  const llegada=document.getElementById('f-llegada').value;
+  const salida=document.getElementById('f-salida').value;
+  const tarifa=parseFloat(document.getElementById('f-tarifa').value)||0;
+  const n=nights(llegada,salida);
+  const total=tarifa*n;
+  const dep=parseFloat(document.getElementById('f-dep-monto').value)||0;
+  const saldo=total-dep;
+  const sr=document.getElementById('saldo-row');
+  const sf=document.getElementById('fin-saldo');
+  sf.textContent=`S/ ${Math.abs(saldo).toFixed(2)}`;
+  if(saldo<=0){sr.className='fin-row saldo ok';sf.textContent=`S/ 0.00 (Pagado)`;}
+  else{sr.className='fin-row saldo';}
+}
+
+// FOTO
+function addFoto(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    fotosArray.push(e.target.result);
+    renderFotosGrid();
+    input.value='';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeFoto(idx){
+  fotosArray.splice(idx,1);
+  renderFotosGrid();
+}
+
+function renderFotosGrid(){
+  const g=document.getElementById('fotos-grid');
+  if(!g)return;
+  g.innerHTML=fotosArray.map((f,i)=>`
+    <div style="position:relative;width:90px;height:90px">
+      <img src="${f}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:.5px solid var(--border)">
+      <button onclick="removeFoto(${i})" style="position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:13px;cursor:pointer">✕</button>
     </div>`).join('');
 }
 
-// ============ MODAL RESERVA ============
+function clearFoto(){
+  fotosArray=[];
+  renderFotosGrid();
+  document.getElementById('f-dep-foto').value='';
+}
+
+// MODAL RESERVA
 function populateHabs(selHab){
   const s=document.getElementById('f-hab');
-  s.innerHTML=HABITACIONES.map(h=>`<option value="${h.num}" data-tarifa="${h.tarifa}" ${h.num===selHab?'selected':''}>${h.num} — ${h.tipo} (S/ ${h.tarifa})</option>`).join('');
+  s.innerHTML=HABS.map(h=>`<option value="${h.num}" data-tarifa="${h.tarifa}" ${h.num===selHab?'selected':''}>${h.num} — ${h.tipo} (S/ ${h.tarifa})</option>`).join('');
 }
 
-function updateTarifa(){
-  const sel=document.getElementById('f-hab');
-  const opt=sel.options[sel.selectedIndex];
-  document.getElementById('f-tarifa').value=opt.dataset.tarifa||'';
+function oResHab(numHab){
+  oRes();
+  // Pre-select the habitacion
+  setTimeout(()=>{
+    const sel=document.getElementById('f-hab');
+    if(sel){
+      sel.value=numHab;
+      onHabChange();
+    }
+  },50);
 }
 
-function oRes(id){
-  if(!isLoggedIn){toast('Iniciá sesión para editar');return}
+let currentGrupoId=null;
+
+function oRes(id, prefill){
+  if(!isLoggedIn){toast('Inicia sesión para editar');return}
   editResId=id||null;
-  fotoBase64=null;
-  document.getElementById('foto-preview').style.display='none';
-  document.getElementById('foto-preview').src='';
-  document.getElementById('foto-label').style.display='flex';
-  ['f-nombre','f-contacto','f-llegada','f-atencion','f-dep-monto','f-dep-fecha','f-notas'].forEach(x=>document.getElementById(x).value='');
+  clearFoto();
+  document.getElementById('f-dep-tipo').value='';
+  document.getElementById('dep-otro-field').style.display='none';
+  document.getElementById('f-dep-tipo').onchange=function(){
+    document.getElementById('dep-otro-field').style.display=this.value==='otro'?'':'none';
+  };
+  ['f-nombre','f-contacto','f-llegada','f-salida','f-fechares','f-hora','f-atencion','f-dep-monto','f-dep-fecha','f-dep-otro','f-notas'].forEach(x=>document.getElementById(x).value='');
   populateHabs(null);
-  updateTarifa();
+  document.getElementById('f-tarifa').value='';
+  document.getElementById('fin-noches').textContent='0';
+  document.getElementById('fin-total').textContent='S/ 0.00';
+  document.getElementById('fin-saldo').textContent='S/ 0.00';
+  document.getElementById('grupo-info').style.display='none';
+  document.getElementById('btn-otra-hab').style.display='none';
+  currentGrupoId=null;
 
   if(id){
     const r=reservas.find(x=>x.id===id);if(!r)return;
@@ -617,102 +871,151 @@ function oRes(id){
     document.getElementById('f-nombre').value=r.nombre||'';
     document.getElementById('f-contacto').value=r.contacto||'';
     document.getElementById('f-llegada').value=r.llegada||'';
+    document.getElementById('f-salida').value=r.salida||'';
+    document.getElementById('f-fechares').value=r.fechares||'';
+    document.getElementById('f-hora').value=r.hora||'';
     document.getElementById('f-atencion').value=r.atencion||'';
     document.getElementById('f-dep-monto').value=r.depMonto||'';
     document.getElementById('f-dep-fecha').value=r.depFecha||'';
+    document.getElementById('f-dep-tipo').value=r.depTipo||'';
     document.getElementById('f-notas').value=r.notas||'';
-    if(r.depFoto){
-      fotoBase64=r.depFoto;
-      document.getElementById('foto-preview').src=r.depFoto;
-      document.getElementById('foto-preview').style.display='block';
-      document.getElementById('foto-label').style.display='none';
-    }
+    try{fotosArray=r.depFoto?JSON.parse(r.depFoto):[];}catch{fotosArray=r.depFoto?[r.depFoto]:[];}
+    renderFotosGrid();
+    currentGrupoId=r.grupoId||null;
+    if(currentGrupoId)mostrarInfoGrupo(currentGrupoId,id);
+    document.getElementById('btn-otra-hab').style.display='';
+    calcFinanciero();
   } else {
     document.getElementById('mres-t').textContent='Nueva reserva';
     document.getElementById('mres-s').textContent=selDay?`Llegada: ${fmt(selDay)}`:'';
     document.getElementById('res-del-btn').style.display='none';
-    if(selDay)document.getElementById('f-llegada').value=selDay;
+    if(selDay){document.getElementById('f-llegada').value=selDay;}
+    document.getElementById('f-fechares').value=today;
     document.getElementById('f-dep-fecha').value=today;
+    if(prefill){
+      document.getElementById('f-nombre').value=prefill.nombre||'';
+      document.getElementById('f-contacto').value=prefill.contacto||'';
+      document.getElementById('f-atencion').value=prefill.atencion||'';
+      document.getElementById('f-llegada').value=prefill.llegada||selDay||'';
+      document.getElementById('f-salida').value=prefill.salida||'';
+      document.getElementById('f-fechares').value=prefill.fechares||today;
+      currentGrupoId=prefill.grupoId;
+      mostrarInfoGrupo(currentGrupoId,null);
+      document.getElementById('btn-otra-hab').style.display='';
+    }
+    onHabChange();
   }
   document.getElementById('mres').style.display='flex';
 }
 
-function previewFoto(input){
-  const file=input.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    fotoBase64=e.target.result;
-    document.getElementById('foto-preview').src=fotoBase64;
-    document.getElementById('foto-preview').style.display='block';
-    document.getElementById('foto-label').style.display='none';
-  };
-  reader.readAsDataURL(file);
+function mostrarInfoGrupo(grupoId,excludeId){
+  const otras=reservas.filter(r=>r.grupoId===grupoId&&r.id!==excludeId);
+  const el=document.getElementById('grupo-info');
+  if(otras.length){
+    el.style.display='';
+    el.innerHTML=`🔗 Parte de una reserva múltiple junto con: ${otras.map(r=>'Hab. '+r.hab).join(', ')}`;
+  } else {
+    el.style.display='none';
+  }
 }
 
-async function sRes(){
+async function guardarYAgregarOtra(){
+  const nombre=document.getElementById('f-nombre').value.trim();
+  if(!nombre){toast('Ingresa el nombre del huésped primero');return}
+  await sRes(true);
+  const prefill={
+    nombre,
+    contacto:document.getElementById('f-contacto').value.trim(),
+    atencion:document.getElementById('f-atencion').value.trim(),
+    llegada:document.getElementById('f-llegada').value,
+    salida:document.getElementById('f-salida').value,
+    fechares:document.getElementById('f-fechares').value,
+    grupoId:currentGrupoId
+  };
+  oRes(null,prefill);
+}
+
+async function sRes(silent){
   const nombre=document.getElementById('f-nombre').value.trim();
   const hab=document.getElementById('f-hab').value;
   const llegada=document.getElementById('f-llegada').value;
-  if(!nombre){toast('Ingresá el nombre del huésped');return}
-  if(!hab){toast('Seleccioná una habitación');return}
-  if(!llegada){toast('Ingresá la fecha de llegada');return}
-
-  const habInfo=HABITACIONES.find(h=>h.num===hab);
+  if(!nombre){toast('Ingresa el nombre del huésped');return}
+  if(!hab){toast('Selecciona una habitación');return}
+  if(!llegada){toast('Ingresa la fecha de llegada');return}
+  const habInfo=HABS.find(h=>h.num===hab);
+  const depTipoVal=document.getElementById('f-dep-tipo').value;
+  const depTipo=depTipoVal==='otro'?document.getElementById('f-dep-otro').value:depTipoVal;
+  if(!currentGrupoId)currentGrupoId=uid();
   const res={
     id:editResId||uid(),
-    hab,
-    tipo:habInfo?.tipo||'',
+    grupoId:currentGrupoId,
+    hab,tipo:habInfo?.tipo||'',
     tarifa:document.getElementById('f-tarifa').value||habInfo?.tarifa||'',
     nombre,
     contacto:document.getElementById('f-contacto').value.trim(),
     llegada,
+    salida:document.getElementById('f-salida').value||'',
+    fechares:document.getElementById('f-fechares').value||today,
+    hora:document.getElementById('f-hora').value||'',
     atencion:document.getElementById('f-atencion').value.trim(),
     depMonto:document.getElementById('f-dep-monto').value||'',
     depFecha:document.getElementById('f-dep-fecha').value||'',
-    depFoto:fotoBase64||'',
+    depTipo,
+    depFoto:fotosArray.length?JSON.stringify(fotosArray):'',
     notas:document.getElementById('f-notas').value.trim(),
   };
-
-  if(editResId){const i=reservas.findIndex(x=>x.id===editResId);reservas[i]=res}
+  if(editResId){const i=reservas.findIndex(x=>x.id===editResId);if(i>=0)reservas[i]=res;else reservas.push(res);}
   else reservas.push(res);
   localStorage.setItem('hr_reservas',JSON.stringify(reservas));
-  cm2('mres');renderAll();
-  ss('load','Guardando…');
-  const ok=await apiP({action:'saveReserva',data:res});
-  ss(ok?.ok?'ok':'err',ok?.ok?`Sync ${new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'})}`:'Error al guardar');
-  toast(ok?.ok?'Reserva guardada ✓':'Guardado localmente');
+  if(!silent){cm2('mres');}
+  renderAll();
+  ss('load','Guardando en Sheets…');
+  try{
+    const ok=await apiP({action:'saveReserva',data:res});
+    ss(ok?.ok?'ok':'err',ok?.ok?`Guardado ${new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'})}`:'Error al guardar');
+    if(!silent)toast(ok?.ok?'Reserva guardada ✓':'Error — guardado localmente');
+  }catch(e){
+    ss('err','Error de conexión');
+    if(!silent)toast('Sin conexión — guardado localmente');
+  }
 }
 
 async function delRes(){
   if(!confirm('¿Eliminar esta reserva?'))return;
-  reservas=reservas.filter(x=>x.id!==editResId);
+  const id=editResId;
+  reservas=reservas.filter(x=>x.id!==id);
   localStorage.setItem('hr_reservas',JSON.stringify(reservas));
   cm2('mres');renderAll();
-  await apiP({action:'deleteReserva',id:editResId});
-  toast('Reserva eliminada');
+  try{await apiP({action:'deleteReserva',id});toast('Reserva eliminada');}
+  catch{toast('Eliminada localmente');}
 }
 
-// ============ VER / VOUCHER ============
+// VER / VOUCHER
 function verRes(id){
   verResId=id;
   const r=reservas.find(x=>x.id===id);if(!r)return;
-  const editBtn=document.getElementById('ver-edit-btn');
-  if(editBtn)editBtn.style.display=isLoggedIn?'':'none';
-
+  if(document.getElementById('ver-edit-btn'))
+    document.getElementById('ver-edit-btn').style.display=isLoggedIn?'':'none';
+  const n=nights(r.llegada,r.salida);
+  const total=(parseFloat(r.tarifa)||0)*n;
+  const dep=parseFloat(r.depMonto)||0;
+  const saldo=total-dep;
   document.getElementById('voucher-content').innerHTML=`
     <div class="voucher-wrap" id="voucher-render">
-      <div class="voucher-head">
-        <h2>RESERVA</h2>
-        <p>Comprobante de reserva</p>
-      </div>
+      <div class="voucher-head"><h2>RESERVA</h2><p>Hab. ${r.hab} · ${r.tipo}</p><p style="margin-top:6px;font-size:15px;font-weight:600">Llegada ${fmt(r.llegada)}${r.salida?' → Salida '+fmt(r.salida):''}</p></div>
       <div class="voucher-body">
         <div class="v-row"><span class="v-label">Habitación</span><span class="v-val">${r.hab} — ${r.tipo}</span></div>
-        <div class="v-row"><span class="v-label">Tarifa</span><span class="v-val">S/ ${r.tarifa}</span></div>
         <div class="v-row"><span class="v-label">Huésped</span><span class="v-val">${r.nombre}</span></div>
         <div class="v-row"><span class="v-label">Contacto</span><span class="v-val">${r.contacto||'—'}</span></div>
-        <div class="v-row"><span class="v-label">Fecha de llegada</span><span class="v-val">${fmt(r.llegada)}</span></div>
-        <div class="v-row"><span class="v-label">Depósito</span><span class="v-val">${r.depMonto?`S/ ${r.depMonto}`:'Sin depósito'}</span></div>
+        <div class="v-row"><span class="v-label">Fecha reserva</span><span class="v-val">${fmt(r.fechares)}</span></div>
+        <div class="v-row"><span class="v-label">Llegada</span><span class="v-val">${fmt(r.llegada)}${r.hora?' · 🕐 '+r.hora:''}</span></div>
+        <div class="v-row"><span class="v-label">Salida</span><span class="v-val">${fmt(r.salida)}</span></div>
+        <div class="v-row"><span class="v-label">Noches</span><span class="v-val">${n}</span></div>
+        <div class="v-row"><span class="v-label">Tarifa/noche</span><span class="v-val">S/ ${r.tarifa}</span></div>
+        <div class="v-row"><span class="v-label">Total</span><span class="v-val">S/ ${total.toFixed(2)}</span></div>
+        <div class="v-row"><span class="v-label">Depósito${r.depTipo?' ('+r.depTipo+')':''}</span><span class="v-val">${dep>0?`S/ ${dep.toFixed(2)}`:'Sin depósito'}</span></div>
         <div class="v-row"><span class="v-label">Fecha depósito</span><span class="v-val">${fmt(r.depFecha)}</span></div>
+        <div class="v-row"><span class="v-label">Saldo pendiente</span><span class="v-val v-saldo ${saldo<=0?'ok':''}">${saldo<=0?'Pagado completo':'S/ '+saldo.toFixed(2)}</span></div>
         <div class="v-row"><span class="v-label">Atendió</span><span class="v-val">${r.atencion||'—'}</span></div>
         ${r.notas?`<div class="v-row"><span class="v-label">Notas</span><span class="v-val">${r.notas}</span></div>`:''}
         ${r.depFoto?`<img src="${r.depFoto}" class="voucher-foto">`:''}
@@ -722,78 +1025,72 @@ function verRes(id){
   document.getElementById('mver').style.display='flex';
 }
 
-function editFromVer(){
-  cm2('mver');
-  oRes(verResId);
-}
+function editFromVer(){cm2('mver');oRes(verResId);}
 
 async function shareWA(){
-  const el=document.getElementById('voucher-render');
-  if(!el)return;
+  const el=document.getElementById('voucher-render');if(!el)return;
   toast('Generando imagen…');
   try{
-    const canvas=await html2canvas(el,{scale:2,backgroundColor:'#ffffff',useCORS:true});
+    const canvas=await html2canvas(el,{scale:2,backgroundColor:'#ffffff',useCORS:true,allowTaint:true});
     canvas.toBlob(async blob=>{
       const r=reservas.find(x=>x.id===verResId);
-      const text=`*RESERVA*\nHab. ${r?.hab||''} — ${r?.nombre||''}\nLlegada: ${fmt(r?.llegada||'')}\nDepósito: ${r?.depMonto?`S/ ${r.depMonto}`:'Sin depósito'}`;
-      if(navigator.share&&navigator.canShare&&navigator.canShare({files:[new File([blob],'reserva.png',{type:'image/png'})]})){
-        await navigator.share({files:[new File([blob],'reserva.png',{type:'image/png'})],text});
-      } else {
-        const url=URL.createObjectURL(blob);
-        const a=document.createElement('a');a.href=url;a.download='reserva.png';a.click();
-        URL.revokeObjectURL(url);
-        toast('Imagen descargada — compartí desde tu galería');
+      const llegadaClean=(r?.llegada||'').substring(0,10);
+      const salidaClean=(r?.salida||'').substring(0,10);
+      const text=`*RESERVA*\nHab. ${r?.hab||''} — ${r?.nombre||''}\nLlegada: ${fmt(llegadaClean)}${r?.hora?' · '+r.hora:''}\nSalida: ${fmt(salidaClean)}`;
+      if(navigator.share&&blob){
+        try{
+          await navigator.share({files:[new File([blob],'reserva.png',{type:'image/png'})],text});
+          return;
+        }catch{}
       }
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');a.href=url;a.download='reserva.png';a.click();
+      URL.revokeObjectURL(url);
+      toast('Imagen descargada — comparte desde tu galería');
     },'image/png');
-  }catch(e){toast('Error al generar imagen')}
+  }catch(e){toast('Error al generar imagen: '+e.message)}
 }
 
 async function downloadImg(){
   const el=document.getElementById('voucher-render');if(!el)return;
   toast('Generando imagen…');
   try{
-    const canvas=await html2canvas(el,{scale:2,backgroundColor:'#ffffff',useCORS:true});
+    const canvas=await html2canvas(el,{scale:2,backgroundColor:'#ffffff',useCORS:true,allowTaint:true});
     const a=document.createElement('a');
     a.href=canvas.toDataURL('image/png');
     a.download='reserva.png';a.click();
     toast('Imagen descargada ✓');
-  }catch(e){toast('Error al generar imagen')}
+  }catch(e){toast('Error: '+e.message)}
 }
 
-// ============ CONFIG / PASS ============
-function hideCfg(){
-  document.getElementById('cfg-panel').style.display='none';
+// CONFIG
+function showCfg(){
+  document.getElementById('day-panel').style.display='none';
+  document.getElementById('cfg-panel').style.display='';
+  document.getElementById('cfg-panel').scrollIntoView({behavior:'smooth'});
 }
-
+function hideCfg(){document.getElementById('cfg-panel').style.display='none';}
 async function changePass(){
   const old=document.getElementById('cfg-old').value;
   const n1=document.getElementById('cfg-new').value;
   const n2=document.getElementById('cfg-new2').value;
-  if(!old||!n1||!n2){toast('Completá todos los campos');return}
+  if(!old||!n1||!n2){toast('Completa todos los campos');return}
   if(n1!==n2){toast('Las contraseñas nuevas no coinciden');return}
-  if(n1.length<6){toast('La contraseña debe tener al menos 6 caracteres');return}
-  ss('load','Verificando…');
-  const ok=await apiP({action:'cambiarPass',oldHash:hashSimple(old),newHash:hashSimple(n1)});
-  if(ok?.ok){
-    toast('Contraseña actualizada ✓');
-    ['cfg-old','cfg-new','cfg-new2'].forEach(x=>document.getElementById(x).value='');
-    hideCfg();
-  } else {
-    toast('Contraseña actual incorrecta');
-  }
+  if(n1.length<6){toast('Mínimo 6 caracteres');return}
+  ss('load','Actualizando…');
+  try{
+    const ok=await apiP({action:'cambiarPass',oldHash:hashSimple(old),newHash:hashSimple(n1)});
+    if(ok?.ok){toast('Contraseña actualizada ✓');['cfg-old','cfg-new','cfg-new2'].forEach(x=>document.getElementById(x).value='');hideCfg();}
+    else toast('Contraseña actual incorrecta');
+  }catch{toast('Error de conexión');}
   ss('ok','Conectado');
 }
 
-// ============ UTILS ============
 function cm2(id){document.getElementById(id).style.display='none'}
 function bc(e,id){if(e.target.id===id)cm2(id)}
-function toast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2800);
-}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
 
-// ============ INIT ============
+// INIT
 initSession();
 loadAll();
 startSync();
