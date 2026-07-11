@@ -6,7 +6,7 @@
 <title>Reservas</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a1a2e;min-height:100vh;font-size:16px}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a1a2e;min-height:100vh;font-size:17px}
 :root{--ink:#1a1a2e;--ink2:#4a4a6a;--ink3:#8888aa;--card:#fff;--surface:#f0f0f5;--accent:#2563eb;--accent2:#1d4ed8;--ok:#059669;--warn:#d97706;--danger:#dc2626;--border:#e0e0ee;--r:12px}
 
 .topbar{background:var(--card);border-bottom:.5px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;gap:10px}
@@ -139,7 +139,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
 /* VOUCHER */
 .voucher-wrap{background:#fff;border-radius:12px;overflow:hidden;border:.5px solid var(--border)}
 .voucher-head{background:var(--accent);color:#fff;padding:20px 22px;text-align:center}
-.voucher-head h2{font-size:24px;font-weight:700;letter-spacing:.5px}
+.voucher-head h2{font-size:26px;font-weight:700;letter-spacing:.5px}
 .voucher-head p{font-size:14px;opacity:.85;margin-top:4px}
 .voucher-body{padding:18px 22px}
 .v-row{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:.5px solid #f0f0f0;gap:10px}
@@ -149,7 +149,22 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
 .v-saldo{font-size:15px;font-weight:700;color:var(--danger)}
 .v-saldo.ok{color:var(--ok)}
 .voucher-foto{width:100%;border-radius:9px;margin-top:12px;border:.5px solid #e0e0e0}
-.voucher-foot{background:#f8f8fc;padding:13px 22px;text-align:center;font-size:12px;color:#999}
+.voucher-foot{background:#f8f8fc;padding:13px 22px;text-align:center;font-size:13px;color:#999}
+.v-section{padding:14px 0;border-bottom:.5px solid #f0f0f0}
+.v-section:last-child{border-bottom:none}
+.v-section-title{font-size:12px;font-weight:700;color:#9090aa;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.v-pair{display:flex;gap:12px}
+.v-pair>div{flex:1}
+.v-mini-label{font-size:12px;color:#999;margin-bottom:3px}
+.v-mini-val{font-size:16px;font-weight:600;color:#1a1a2e}
+.v-fin-box{background:#f8faff;border-radius:9px;padding:12px 14px;margin-top:4px}
+.v-fin-row{display:flex;justify-content:space-between;font-size:15px;padding:4px 0}
+.v-fin-row.tot{font-weight:700;border-top:.5px dashed #d0dcf5;margin-top:4px;padding-top:6px}
+.v-saldo-box{display:flex;justify-content:space-between;align-items:center;background:#fef2f2;border-radius:9px;padding:10px 14px;margin-top:8px}
+.v-saldo-box.ok{background:#f0fdf4}
+.v-saldo-box .lbl{font-size:14px;font-weight:600;color:#666}
+.v-saldo-box .val{font-size:19px;font-weight:800;color:var(--danger)}
+.v-saldo-box.ok .val{color:var(--ok)}
 .share-actions{display:flex;gap:8px;margin-top:14px;justify-content:center;flex-wrap:wrap}
 .btn-wa{background:#25d366;color:#fff;border:none;border-radius:9px;padding:11px 20px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:7px}
 .btn-wa:hover{background:#128c7e}
@@ -351,7 +366,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
       <div class="field" style="margin-top:12px;margin-bottom:0">
         <label>Capturas / fotos del depósito</label>
         <div id="fotos-grid" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px"></div>
-        <input type="file" id="f-dep-foto" accept="image/*" capture="environment" style="display:none" onchange="addFoto(this)">
+        <input type="file" id="f-dep-foto" accept="image/*" style="display:none" onchange="addFoto(this)">
         <label for="f-dep-foto" class="foto-label" id="foto-label">📷 Agregar foto (puedes agregar varias)</label>
       </div>
     </div>
@@ -410,7 +425,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw58FsApZOiov8oz_JX5sxdiKulvWYow8p_MZtziQZxZJlyXraxW8cqf15oK7JPfJ6C/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwgF41YYvAJRANefB9i8beUzEob6wgrz3DIdUR7I8_NCTJpCm2jY5C9bm9Utywa1Uq0/exec';
 
 const HABS = [
   {num:'201',tipo:'Matrimonial',tarifa:75},{num:'202',tipo:'Matrimonial',tarifa:75},
