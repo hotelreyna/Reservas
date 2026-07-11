@@ -575,7 +575,7 @@ async function loadAll(){
   try{
     const raw=await apiG('getReservas');
     reservas=(raw||[]).filter(r=>r[0]&&r[0]!=='id').map(r=>({
-      id:r[0],hab:r[1],tipo:r[2],tarifa:parseFloat(r[3])||0,
+      id:String(r[0]),hab:String(r[1]),tipo:r[2],tarifa:parseFloat(r[3])||0,
       nombre:r[4],contacto:r[5],llegada:r[6],salida:r[7],
       fechares:r[8],hora:r[9],atencion:r[10],
       depMonto:r[11],depFecha:r[12],depTipo:r[13],depFoto:r[14],notas:r[15],
@@ -700,8 +700,8 @@ function selectDay(ds){
 function resDelDia(ds){
   return reservas.filter(r=>{
     if(!r.llegada)return false;
-    const salida=r.salida||r.llegada;
-    return r.llegada<=ds&&salida>=ds;
+    if(r.salida) return r.llegada<=ds && ds<r.salida;
+    return r.llegada===ds;
   });
 }
 
@@ -840,7 +840,8 @@ function clearFoto(){
 // MODAL RESERVA
 function populateHabs(selHab){
   const s=document.getElementById('f-hab');
-  s.innerHTML=HABS.map(h=>`<option value="${h.num}" data-tarifa="${h.tarifa}" ${h.num===selHab?'selected':''}>${h.num} — ${h.tipo} (S/ ${h.tarifa})</option>`).join('');
+  const selStr=selHab!=null?String(selHab):null;
+  s.innerHTML=HABS.map(h=>`<option value="${h.num}" data-tarifa="${h.tarifa}" ${String(h.num)===selStr?'selected':''}>${h.num} — ${h.tipo} (S/ ${h.tarifa})</option>`).join('');
 }
 
 function oResHab(numHab){
