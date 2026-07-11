@@ -1016,25 +1016,77 @@ function verRes(id){
   const total=(parseFloat(r.tarifa)||0)*n;
   const dep=parseFloat(r.depMonto)||0;
   const saldo=total-dep;
+
+  let fotos=[];
+  try{fotos=r.depFoto?JSON.parse(r.depFoto):[];}catch{fotos=r.depFoto?[r.depFoto]:[];}
+
+  if(!isLoggedIn){
+    document.getElementById('voucher-content').innerHTML=`
+      <div class="voucher-wrap" id="voucher-render">
+        <div class="voucher-head"><h2>RESERVA</h2><p style="font-size:15px;font-weight:600;margin-top:4px">Hab. ${r.hab} &middot; ${r.tipo}</p></div>
+        <div class="voucher-body">
+          <div class="v-row"><span class="v-label">Habitación</span><span class="v-val">${r.hab} — ${r.tipo}</span></div>
+          <div class="v-row"><span class="v-label">Llegada</span><span class="v-val">${fmt(r.llegada)}</span></div>
+          <div class="v-row"><span class="v-label">Salida</span><span class="v-val">${fmt(r.salida)}</span></div>
+          <div class="v-row"><span class="v-label">Noches</span><span class="v-val">${n}</span></div>
+          <div class="v-row"><span class="v-label">Estado</span><span class="v-val">Ocupada</span></div>
+        </div>
+        <div class="voucher-foot">Inicia sesión para ver el detalle completo</div>
+      </div>`;
+    document.getElementById('mver').style.display='flex';
+    return;
+  }
+
+  const otras=r.grupoId?reservas.filter(x=>x.grupoId===r.grupoId&&x.id!==r.id):[];
+  const grupoHtml=otras.length?`También reservó: ${otras.map(o=>'Hab. '+o.hab).join(', ')}`:'';
+
   document.getElementById('voucher-content').innerHTML=`
     <div class="voucher-wrap" id="voucher-render">
-      <div class="voucher-head"><h2>RESERVA</h2><p>Hab. ${r.hab} · ${r.tipo}</p><p style="margin-top:6px;font-size:15px;font-weight:600">Llegada ${fmt(r.llegada)}${r.salida?' → Salida '+fmt(r.salida):''}</p></div>
+      <div class="voucher-head"><h2>RESERVA</h2><p style="font-size:15px;font-weight:600;margin-top:4px">Hab. ${r.hab} &middot; ${r.tipo}</p><p style="margin-top:6px;font-size:14px;opacity:.9">Llegada ${fmt(r.llegada)}${r.salida?' &rarr; Salida '+fmt(r.salida):''}</p></div>
       <div class="voucher-body">
-        <div class="v-row"><span class="v-label">Habitación</span><span class="v-val">${r.hab} — ${r.tipo}</span></div>
-        <div class="v-row"><span class="v-label">Huésped</span><span class="v-val">${r.nombre}</span></div>
-        <div class="v-row"><span class="v-label">Contacto</span><span class="v-val">${r.contacto||'—'}</span></div>
-        <div class="v-row"><span class="v-label">Fecha reserva</span><span class="v-val">${fmt(r.fechares)}</span></div>
-        <div class="v-row"><span class="v-label">Llegada</span><span class="v-val">${fmt(r.llegada)}${r.hora?' · 🕐 '+r.hora:''}</span></div>
-        <div class="v-row"><span class="v-label">Salida</span><span class="v-val">${fmt(r.salida)}</span></div>
-        <div class="v-row"><span class="v-label">Noches</span><span class="v-val">${n}</span></div>
-        <div class="v-row"><span class="v-label">Tarifa/noche</span><span class="v-val">S/ ${r.tarifa}</span></div>
-        <div class="v-row"><span class="v-label">Total</span><span class="v-val">S/ ${total.toFixed(2)}</span></div>
-        <div class="v-row"><span class="v-label">Depósito${r.depTipo?' ('+r.depTipo+')':''}</span><span class="v-val">${dep>0?`S/ ${dep.toFixed(2)}`:'Sin depósito'}</span></div>
-        <div class="v-row"><span class="v-label">Fecha depósito</span><span class="v-val">${fmt(r.depFecha)}</span></div>
-        <div class="v-row"><span class="v-label">Saldo pendiente</span><span class="v-val v-saldo ${saldo<=0?'ok':''}">${saldo<=0?'Pagado completo':'S/ '+saldo.toFixed(2)}</span></div>
-        <div class="v-row"><span class="v-label">Atendió</span><span class="v-val">${r.atencion||'—'}</span></div>
-        ${r.notas?`<div class="v-row"><span class="v-label">Notas</span><span class="v-val">${r.notas}</span></div>`:''}
-        ${r.depFoto?`<img src="${r.depFoto}" class="voucher-foto">`:''}
+        <div class="v-section">
+          <div class="v-section-title">Huésped</div>
+          <div class="v-pair">
+            <div><div class="v-mini-label">Nombre</div><div class="v-mini-val">${r.nombre}</div></div>
+            <div><div class="v-mini-label">Contacto</div><div class="v-mini-val">${r.contacto||'—'}</div></div>
+          </div>
+          ${grupoHtml?`<div style="margin-top:8px;font-size:13px;color:#2563eb">${grupoHtml}</div>`:''}
+        </div>
+        <div class="v-section">
+          <div class="v-section-title">Estadía</div>
+          <div class="v-pair">
+            <div><div class="v-mini-label">Llegada</div><div class="v-mini-val">${fmt(r.llegada)}${r.hora?' · 🕐 '+r.hora:''}</div></div>
+            <div><div class="v-mini-label">Salida</div><div class="v-mini-val">${fmt(r.salida)}</div></div>
+          </div>
+          <div class="v-pair" style="margin-top:8px">
+            <div><div class="v-mini-label">Noches</div><div class="v-mini-val">${n}</div></div>
+            <div><div class="v-mini-label">Fecha de reserva</div><div class="v-mini-val">${fmt(r.fechares)}</div></div>
+          </div>
+        </div>
+        <div class="v-section">
+          <div class="v-section-title">Pago</div>
+          <div class="v-fin-box">
+            <div class="v-fin-row"><span>Tarifa por noche</span><span>S/ ${r.tarifa}</span></div>
+            <div class="v-fin-row"><span>${n} noche${n!==1?'s':''}</span><span></span></div>
+            <div class="v-fin-row tot"><span>Total</span><span>S/ ${total.toFixed(2)}</span></div>
+          </div>
+          <div class="v-pair" style="margin-top:10px">
+            <div><div class="v-mini-label">Depósito${r.depTipo?' · '+r.depTipo:''}</div><div class="v-mini-val">${dep>0?`S/ ${dep.toFixed(2)}`:'Sin depósito'}</div></div>
+            <div><div class="v-mini-label">Fecha de depósito</div><div class="v-mini-val">${fmt(r.depFecha)}</div></div>
+          </div>
+          <div class="v-saldo-box ${saldo<=0?'ok':''}">
+            <span class="lbl">${saldo<=0?'Pagado completo':'Saldo pendiente'}</span>
+            <span class="val">${saldo<=0?'✓':'S/ '+saldo.toFixed(2)}</span>
+          </div>
+        </div>
+        <div class="v-section">
+          <div class="v-pair">
+            <div><div class="v-mini-label">Habitación</div><div class="v-mini-val">${r.hab} — ${r.tipo}</div></div>
+            <div><div class="v-mini-label">Atendió</div><div class="v-mini-val">${r.atencion||'—'}</div></div>
+          </div>
+          ${r.notas?`<div style="margin-top:8px"><div class="v-mini-label">Notas</div><div class="v-mini-val" style="font-weight:500">${r.notas}</div></div>`:''}
+        </div>
+        ${fotos.map(f=>`<img src="${f}" class="voucher-foto">`).join('')}
       </div>
       <div class="voucher-foot">Generado el ${fmt(today)}</div>
     </div>`;
