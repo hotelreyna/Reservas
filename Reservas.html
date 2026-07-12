@@ -443,7 +443,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxk4VZ3S8QYquLhzwbl6Wj95fTmfYteSF8378c-YlmjX4myjgmn0sowg8TnbX1qbVqY/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwJb_Gfk4RLm6H4drPvesaLF0b4-X0FqrKZNyIHztRbjPrjR5lEkRDyeQJUxzREFOfw/exec';
 
 const HABS = [
   {num:'201',tipo:'Matrimonial',tarifa:75},{num:'202',tipo:'Matrimonial',tarifa:75},
@@ -1055,6 +1055,11 @@ function oRes(id, prefill){
       currentGrupoId=prefill.grupoId;
       mostrarInfoGrupo(currentGrupoId,null);
       document.getElementById('btn-otra-hab').style.display='';
+      if(prefill.depTipoCompartido)document.getElementById('f-dep-tipo').value=prefill.depTipoCompartido;
+      if(prefill.fotosCompartidas&&prefill.fotosCompartidas.length){
+        document.getElementById('grupo-info').style.display='';
+        document.getElementById('grupo-info').innerHTML+='<div style="margin-top:6px">📷 El depósito y la captura ya se guardaron en la habitación anterior. Deja el monto en 0 aquí si es el mismo pago, o ingresa uno nuevo si es distinto.</div>';
+      }
     }
     onHabChange();
   }
@@ -1075,6 +1080,8 @@ function mostrarInfoGrupo(grupoId,excludeId){
 async function guardarYAgregarOtra(){
   const nombre=document.getElementById('f-nombre').value.trim();
   if(!nombre){toast('Ingresa el nombre del huésped primero');return}
+  const fotosActuales=[...fotosArray];
+  const depTipoActual=document.getElementById('f-dep-tipo').value;
   await sRes(true);
   const prefill={
     nombre,
@@ -1083,9 +1090,12 @@ async function guardarYAgregarOtra(){
     llegada:document.getElementById('f-llegada').value,
     salida:document.getElementById('f-salida').value,
     fechares:document.getElementById('f-fechares').value,
-    grupoId:currentGrupoId
+    grupoId:currentGrupoId,
+    fotosCompartidas:fotosActuales,
+    depTipoCompartido:depTipoActual
   };
   oRes(null,prefill);
+  toast('Habitación guardada — el depósito y la foto ya quedaron en la primera. Deja el depósito en 0 en esta si es el mismo pago.');
 }
 
 async function sRes(silent){
