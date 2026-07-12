@@ -183,6 +183,12 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:11px 20px;border-radius:9px;font-size:14px;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
 .toast.show{opacity:1}
 .empty{text-align:center;padding:22px;color:var(--ink3);font-size:15px}
+.search-result{display:flex;align-items:center;gap:10px;background:var(--surface);border:.5px solid var(--border);border-radius:9px;padding:10px 13px;margin-bottom:6px;cursor:pointer;transition:border-color .15s}
+.search-result:hover{border-color:#93c5fd}
+.confirm-btn{background:#059669;color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.confirm-btn:hover{background:#047857}
+.badge-confirmada{background:#d1fae5;color:#065f46;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
+.badge-pendiente{background:#fef3c7;color:#92400e;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
 .section-label{font-size:13px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
 .sep{border:none;border-top:.5px solid var(--border);margin:16px 0}
 
@@ -208,6 +214,18 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
 </div>
 
 <div class="main">
+
+  <!-- BUSCADOR -->
+  <div class="card" style="margin-bottom:16px">
+    <input type="text" id="global-search" placeholder="🔍 Buscar por nombre o número de habitación…" oninput="renderBusqueda()" style="width:100%;border:.5px solid var(--border);border-radius:9px;padding:11px 14px;font-size:15px;outline:none;font-family:inherit">
+    <div id="busqueda-resultados" style="margin-top:10px"></div>
+  </div>
+
+  <!-- LLEGADAS DE HOY -->
+  <div class="proximas" id="llegadas-hoy-wrap" style="display:none;border-color:#fde68a;background:#fffbeb">
+    <div class="section-label" style="margin:0;color:#92400e">🕐 ¿Ya llegaron? Confirma el check-in de hoy</div>
+    <div class="prox-list" id="llegadas-hoy-list"></div>
+  </div>
 
   <!-- PRÓXIMAS RESERVAS -->
   <div class="proximas" id="proximas-wrap">
@@ -425,7 +443,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwgF41YYvAJRANefB9i8beUzEob6wgrz3DIdUR7I8_NCTJpCm2jY5C9bm9Utywa1Uq0/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxk4VZ3S8QYquLhzwbl6Wj95fTmfYteSF8378c-YlmjX4myjgmn0sowg8TnbX1qbVqY/exec';
 
 const HABS = [
   {num:'201',tipo:'Matrimonial',tarifa:75},{num:'202',tipo:'Matrimonial',tarifa:75},
@@ -579,7 +597,7 @@ async function loadAll(){
       nombre:r[4],contacto:r[5],llegada:r[6],salida:r[7],
       fechares:r[8],hora:r[9],atencion:r[10],
       depMonto:r[11],depFecha:r[12],depTipo:r[13],depFoto:r[14],notas:r[15],
-      grupoId:r[16]||''
+      grupoId:r[16]||'', estado:r[17]||'pendiente', horaLlegadaReal:r[18]||''
     }));
     localStorage.setItem('hr_reservas',JSON.stringify(reservas));
     ss('ok',`Sync ${new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'})}`);
@@ -596,10 +614,75 @@ function startSync(){
 }
 
 function renderAll(){
+  renderLlegadasHoy();
   renderProximas();
   renderCal();
   renderCalMobile();
   if(selDay)renderDayPanel(selDay);
+  renderBusqueda();
+}
+
+// LLEGADAS DE HOY
+function renderLlegadasHoy(){
+  const wrap=document.getElementById('llegadas-hoy-wrap');
+  if(!wrap)return;
+  const hoy=reservas.filter(r=>r.llegada===today && r.estado!=='confirmada');
+  if(!isLoggedIn || !hoy.length){wrap.style.display='none';return}
+  wrap.style.display='';
+  document.getElementById('llegadas-hoy-list').innerHTML=hoy.map(r=>`
+    <div class="prox-item" style="cursor:default">
+      <div class="prox-badge" style="background:#d97706">${r.hab}</div>
+      <div class="prox-info">
+        <div class="prox-nombre">${r.nombre||'Sin nombre'}</div>
+        <div class="prox-meta">${r.tipo}${r.hora?' · Llegada estimada '+r.hora:''} · 📞 ${r.contacto||'—'}</div>
+      </div>
+      <button class="confirm-btn" onclick="confirmarLlegada('${r.id}')">✓ Ya llegó</button>
+    </div>`).join('');
+}
+
+async function confirmarLlegada(id){
+  const ahora=new Date();
+  const horaStr=String(ahora.getHours()).padStart(2,'0')+':'+String(ahora.getMinutes()).padStart(2,'0');
+  const ok=confirm(`¿Confirmar check-in ahora (${horaStr})?`);
+  if(!ok)return;
+  const i=reservas.findIndex(x=>x.id===id);
+  if(i<0)return;
+  reservas[i].estado='confirmada';
+  reservas[i].horaLlegadaReal=horaStr;
+  localStorage.setItem('hr_reservas',JSON.stringify(reservas));
+  renderAll();
+  try{
+    await apiP({action:'saveReserva',data:reservas[i]});
+    toast('Check-in confirmado ✓');
+  }catch{toast('Guardado localmente, revisa tu conexión');}
+}
+
+// BÚSQUEDA GLOBAL
+function renderBusqueda(){
+  const input=document.getElementById('global-search');
+  if(!input)return;
+  const q=input.value.trim().toLowerCase();
+  const cont=document.getElementById('busqueda-resultados');
+  if(!q){cont.innerHTML='';return}
+  const resultados=reservas.filter(r=>
+    (r.nombre||'').toLowerCase().includes(q) ||
+    (r.hab||'').toString().toLowerCase().includes(q) ||
+    (r.contacto||'').toLowerCase().includes(q)
+  ).sort((a,b)=>b.llegada.localeCompare(a.llegada)).slice(0,15);
+  if(!resultados.length){cont.innerHTML='<div class="empty">Sin resultados</div>';return}
+  cont.innerHTML=resultados.map(r=>{
+    const n=nights(r.llegada,r.salida);
+    const nombreShow=isLoggedIn?(r.nombre||'Sin nombre'):r.tipo;
+    const estadoBadge=r.estado==='confirmada'?'<span class="badge-confirmada">Llegó</span>':'<span class="badge-pendiente">Pendiente</span>';
+    return`<div class="search-result" onclick="verRes('${r.id}')">
+      <div class="rbadge">${r.hab}</div>
+      <div class="ri">
+        <div class="rn">${nombreShow}</div>
+        <div class="rm">${fmt(r.llegada)}${r.salida?' → '+fmt(r.salida):''} · ${n} noche${n!==1?'s':''}</div>
+      </div>
+      ${isLoggedIn?estadoBadge:''}
+    </div>`;
+  }).join('');
 }
 
 // PRÓXIMAS
@@ -607,8 +690,15 @@ function renderProximas(){
   const hoy=new Date();
   const en7=new Date(hoy);en7.setDate(en7.getDate()+7);
   const en7str=toStr(en7);
+  const vistosProx=new Set();
   const proximas=reservas
     .filter(r=>r.llegada>=today&&r.llegada<=en7str)
+    .filter(r=>{
+      if(!r.grupoId)return true;
+      if(vistosProx.has(r.grupoId))return false;
+      vistosProx.add(r.grupoId);
+      return true;
+    })
     .sort((a,b)=>a.llegada.localeCompare(b.llegada))
     .slice(0,10);
   document.getElementById('prox-count').textContent=`${proximas.length} en los próximos 7 días`;
@@ -621,9 +711,11 @@ function renderProximas(){
     const d=Math.round((new Date(r.llegada)-hoy)/86400000);
     const dias=d===0?'Hoy':d===1?'Mañana':`En ${d} días`;
     const n=nights(r.llegada,r.salida);
-    const nombreShow=isLoggedIn?(r.nombre||'Sin nombre'):r.tipo;
+    const grupo=r.grupoId?reservas.filter(x=>x.grupoId===r.grupoId):[r];
+    const habLabel=grupo.length>1?grupo.map(x=>x.hab).join(', '):r.hab;
+    const nombreShow=isLoggedIn?(r.nombre||'Sin nombre'):(grupo.length>1?`${grupo.length} habitaciones`:r.tipo);
     return`<div class="prox-item" onclick="verRes('${r.id}')">
-      <div class="prox-badge">${r.hab}</div>
+      <div class="prox-badge">${habLabel}</div>
       <div class="prox-info">
         <div class="prox-nombre">${nombreShow}</div>
         <div class="prox-meta">${fmt(r.llegada)}${r.salida?' → '+fmt(r.salida):''} · ${n>0?n+' noche'+(n!==1?'s':''):''}${isLoggedIn&&r.hora?' · '+r.hora:''}</div>
@@ -737,10 +829,54 @@ function renderDayPanel(ds){
     </div>`;
   }).join('');
 
-  // Res list
+  // Res list — agrupar por grupoId para no repetir huésped
   const rl=document.getElementById('day-rlist');
   if(!dr.length){rl.innerHTML=`<div class="empty">Sin reservas para este día</div>`;return}
-  rl.innerHTML=dr.map(r=>{
+  const vistos=new Set();
+  const drAgrupado=[];
+  dr.forEach(r=>{
+    if(r.grupoId){
+      if(vistos.has(r.grupoId))return;
+      vistos.add(r.grupoId);
+      const grupo=dr.filter(x=>x.grupoId===r.grupoId);
+      if(grupo.length>1){drAgrupado.push({esGrupo:true,items:grupo});return}
+    }
+    drAgrupado.push({esGrupo:false,item:r});
+  });
+  rl.innerHTML=drAgrupado.map(entry=>{
+    if(entry.esGrupo){
+      const items=entry.items;
+      const r=items[0];
+      if(!isLoggedIn){
+        return`<div class="rc" onclick="verRes('${r.id}')">
+          <div class="rbadge">${items.map(i=>i.hab).join(', ')}</div>
+          <div class="ri">
+            <div class="rn">${items.length} habitaciones</div>
+            <div class="rm">${fmt(r.llegada)}${r.salida?' → '+fmt(r.salida):''}</div>
+            <span class="saldo-badge" style="background:#f3f4f6;color:#6b7280">Ocupadas</span>
+          </div>
+        </div>`;
+      }
+      const totalGrupo=items.reduce((s,x)=>{
+        const n=nights(x.llegada,x.salida);
+        return s+(parseFloat(x.tarifa)||0)*n;
+      },0);
+      const depGrupo=items.reduce((s,x)=>s+(parseFloat(x.depMonto)||0),0);
+      const saldoGrupo=totalGrupo-depGrupo;
+      const saldoClassG=saldoGrupo<=0?'saldo-ok':depGrupo>0?'saldo-pen':'saldo-no';
+      const saldoLabelG=saldoGrupo<=0?'Pagado':depGrupo>0?`Saldo S/ ${saldoGrupo.toFixed(2)}`:'Sin depósito';
+      return`<div class="rc editable" onclick="verRes('${r.id}')">
+        <div class="rbadge">${items.map(i=>i.hab).join(', ')}</div>
+        <div class="ri">
+          <div class="rn">${r.nombre||'Sin nombre'}</div>
+          <div class="rm">${items.length} habitaciones (${items.map(i=>i.tipo).join(', ')})<br>
+          ${fmt(r.llegada)}${r.salida?' → '+fmt(r.salida):''}<br>
+          📞 ${r.contacto||'—'} · Atendió: ${r.atencion||'—'}</div>
+          <span class="saldo-badge ${saldoClassG}">${saldoLabelG}</span>
+        </div>
+      </div>`;
+    }
+    const r=entry.item;
     const n=nights(r.llegada,r.salida);
     if(!isLoggedIn){
       return`<div class="rc" onclick="verRes('${r.id}')">
@@ -757,6 +893,7 @@ function renderDayPanel(ds){
     const saldo=total-dep;
     const saldoClass=saldo<=0?'saldo-ok':dep>0?'saldo-pen':'saldo-no';
     const saldoLabel=saldo<=0?'Pagado':dep>0?`Saldo S/ ${saldo.toFixed(2)}`:'Sin depósito';
+    const estadoBadge=r.estado==='confirmada'?`<span class="badge-confirmada" style="margin-left:6px">✓ Llegó ${r.horaLlegadaReal||''}</span>`:'';
     return`<div class="rc editable" onclick="verRes('${r.id}')">
       <div class="rbadge">${r.hab}</div>
       <div class="ri">
@@ -764,7 +901,7 @@ function renderDayPanel(ds){
         <div class="rm">${r.tipo} · S/ ${r.tarifa}/noche · ${n} noche${n!==1?'s':''}<br>
         ${fmt(r.llegada)}${r.salida?' → '+fmt(r.salida):''} · ${r.hora?'🕐 '+r.hora:''}<br>
         📞 ${r.contacto||'—'} · Atendió: ${r.atencion||'—'}</div>
-        <span class="saldo-badge ${saldoClass}">${saldoLabel}</span>
+        <span class="saldo-badge ${saldoClass}">${saldoLabel}</span>${estadoBadge}
       </div>
     </div>`;
   }).join('');
@@ -979,6 +1116,8 @@ async function sRes(silent){
     depTipo,
     depFoto:fotosArray.length?JSON.stringify(fotosArray):'',
     notas:document.getElementById('f-notas').value.trim(),
+    estado:(editResId&&reservas.find(x=>x.id===editResId)?.estado)||'pendiente',
+    horaLlegadaReal:(editResId&&reservas.find(x=>x.id===editResId)?.horaLlegadaReal)||'',
   };
   if(editResId){const i=reservas.findIndex(x=>x.id===editResId);if(i>=0)reservas[i]=res;else reservas.push(res);}
   else reservas.push(res);
@@ -1037,12 +1176,40 @@ function verRes(id){
     return;
   }
 
-  const otras=r.grupoId?reservas.filter(x=>x.grupoId===r.grupoId&&x.id!==r.id):[];
-  const grupoHtml=otras.length?`También reservó: ${otras.map(o=>'Hab. '+o.hab).join(', ')}`:'';
+  const grupoItems=r.grupoId?reservas.filter(x=>x.grupoId===r.grupoId):[r];
+  const esMultiple=grupoItems.length>1;
+
+  // Totales combinados si es reserva múltiple
+  let totalCombinado=0, depCombinado=0;
+  grupoItems.forEach(x=>{
+    const nx=nights(x.llegada,x.salida);
+    totalCombinado+=(parseFloat(x.tarifa)||0)*nx;
+    depCombinado+=parseFloat(x.depMonto)||0;
+  });
+  const saldoCombinado=totalCombinado-depCombinado;
+
+  const habsHtml=esMultiple
+    ? grupoItems.map(x=>{
+        const nx=nights(x.llegada,x.salida);
+        return`<div class="v-pair" style="margin-top:6px"><div><div class="v-mini-label">Hab. ${x.hab}</div><div class="v-mini-val">${x.tipo} · S/ ${x.tarifa}/noche</div></div><div><div class="v-mini-label">Noches</div><div class="v-mini-val">${nx}</div></div></div>`;
+      }).join('')
+    : '';
+
+  const tituloHab = esMultiple ? grupoItems.map(x=>x.hab).join(', ') : r.hab;
+  const tituloTipo = esMultiple ? `${grupoItems.length} habitaciones` : r.tipo;
+
+  // Fotos combinadas de todo el grupo si es múltiple
+  let fotosGrupo=fotos;
+  if(esMultiple){
+    fotosGrupo=[];
+    grupoItems.forEach(x=>{
+      try{const fx=x.depFoto?JSON.parse(x.depFoto):[];fotosGrupo=fotosGrupo.concat(fx);}catch{if(x.depFoto)fotosGrupo.push(x.depFoto);}
+    });
+  }
 
   document.getElementById('voucher-content').innerHTML=`
     <div class="voucher-wrap" id="voucher-render">
-      <div class="voucher-head"><h2>RESERVA</h2><p style="font-size:15px;font-weight:600;margin-top:4px">Hab. ${r.hab} &middot; ${r.tipo}</p><p style="margin-top:6px;font-size:14px;opacity:.9">Llegada ${fmt(r.llegada)}${r.salida?' &rarr; Salida '+fmt(r.salida):''}</p></div>
+      <div class="voucher-head"><h2>RESERVA</h2><p style="font-size:15px;font-weight:600;margin-top:4px">Hab. ${tituloHab} &middot; ${tituloTipo}</p><p style="margin-top:6px;font-size:14px;opacity:.9">Llegada ${fmt(r.llegada)}${r.salida?' &rarr; Salida '+fmt(r.salida):''}</p></div>
       <div class="voucher-body">
         <div class="v-section">
           <div class="v-section-title">Huésped</div>
@@ -1050,8 +1217,12 @@ function verRes(id){
             <div><div class="v-mini-label">Nombre</div><div class="v-mini-val">${r.nombre}</div></div>
             <div><div class="v-mini-label">Contacto</div><div class="v-mini-val">${r.contacto||'—'}</div></div>
           </div>
-          ${grupoHtml?`<div style="margin-top:8px;font-size:13px;color:#2563eb">${grupoHtml}</div>`:''}
         </div>
+        ${esMultiple?`
+        <div class="v-section">
+          <div class="v-section-title">Habitaciones (${grupoItems.length})</div>
+          ${habsHtml}
+        </div>`:''}
         <div class="v-section">
           <div class="v-section-title">Estadía</div>
           <div class="v-pair">
@@ -1066,27 +1237,26 @@ function verRes(id){
         <div class="v-section">
           <div class="v-section-title">Pago</div>
           <div class="v-fin-box">
-            <div class="v-fin-row"><span>Tarifa por noche</span><span>S/ ${r.tarifa}</span></div>
-            <div class="v-fin-row"><span>${n} noche${n!==1?'s':''}</span><span></span></div>
-            <div class="v-fin-row tot"><span>Total</span><span>S/ ${total.toFixed(2)}</span></div>
+            ${esMultiple?`<div class="v-fin-row"><span>Suma de ${grupoItems.length} habitaciones</span><span></span></div>`:`<div class="v-fin-row"><span>Tarifa por noche</span><span>S/ ${r.tarifa}</span></div><div class="v-fin-row"><span>${n} noche${n!==1?'s':''}</span><span></span></div>`}
+            <div class="v-fin-row tot"><span>Total</span><span>S/ ${totalCombinado.toFixed(2)}</span></div>
           </div>
           <div class="v-pair" style="margin-top:10px">
-            <div><div class="v-mini-label">Depósito${r.depTipo?' · '+r.depTipo:''}</div><div class="v-mini-val">${dep>0?`S/ ${dep.toFixed(2)}`:'Sin depósito'}</div></div>
+            <div><div class="v-mini-label">Depósito${!esMultiple&&r.depTipo?' · '+r.depTipo:''}</div><div class="v-mini-val">${depCombinado>0?`S/ ${depCombinado.toFixed(2)}`:'Sin depósito'}</div></div>
             <div><div class="v-mini-label">Fecha de depósito</div><div class="v-mini-val">${fmt(r.depFecha)}</div></div>
           </div>
-          <div class="v-saldo-box ${saldo<=0?'ok':''}">
-            <span class="lbl">${saldo<=0?'Pagado completo':'Saldo pendiente'}</span>
-            <span class="val">${saldo<=0?'✓':'S/ '+saldo.toFixed(2)}</span>
+          <div class="v-saldo-box ${saldoCombinado<=0?'ok':''}">
+            <span class="lbl">${saldoCombinado<=0?'Pagado completo':'Saldo pendiente'}</span>
+            <span class="val">${saldoCombinado<=0?'✓':'S/ '+saldoCombinado.toFixed(2)}</span>
           </div>
         </div>
         <div class="v-section">
           <div class="v-pair">
-            <div><div class="v-mini-label">Habitación</div><div class="v-mini-val">${r.hab} — ${r.tipo}</div></div>
+            <div><div class="v-mini-label">Habitación${esMultiple?'es':''}</div><div class="v-mini-val">${tituloHab}</div></div>
             <div><div class="v-mini-label">Atendió</div><div class="v-mini-val">${r.atencion||'—'}</div></div>
           </div>
           ${r.notas?`<div style="margin-top:8px"><div class="v-mini-label">Notas</div><div class="v-mini-val" style="font-weight:500">${r.notas}</div></div>`:''}
         </div>
-        ${fotos.map(f=>`<img src="${f}" class="voucher-foto">`).join('')}
+        ${fotosGrupo.map(f=>`<img src="${f}" class="voucher-foto">`).join('')}
       </div>
       <div class="voucher-foot">Generado el ${fmt(today)}</div>
     </div>`;
