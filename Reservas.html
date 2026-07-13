@@ -189,6 +189,15 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
 .confirm-btn:hover{background:#047857}
 .badge-confirmada{background:#d1fae5;color:#065f46;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
 .badge-pendiente{background:#fef3c7;color:#92400e;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
+.atend-row{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:9px;padding:9px 12px}
+.atend-nombre{flex:1;font-size:15px;font-weight:600;color:var(--ink)}
+.atend-swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid #fff;box-shadow:0 0 0 1px var(--border);flex-shrink:0}
+.atend-del{background:none;border:none;color:var(--ink3);font-size:18px;cursor:pointer;width:28px;height:28px;border-radius:7px;flex-shrink:0}
+.atend-del:hover{background:#fee2e2;color:var(--danger)}
+.color-picker-row{display:flex;gap:6px;flex-wrap:wrap;padding:8px 0;width:100%}
+.color-swatch-opt{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .1s}
+.color-swatch-opt:hover{transform:scale(1.15)}
+.color-swatch-opt.selected{border-color:#1a1a2e}
 .section-label{font-size:13px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
 .sep{border:none;border-top:.5px solid var(--border);margin:16px 0}
 
@@ -440,6 +449,26 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
 </div>
 </div>
 
+<!-- MODAL GESTIONAR PERSONAS -->
+<div class="ov" id="matend" style="display:none" onclick="bc(event,'matend')">
+<div class="modal">
+  <div class="mhead">
+    <div><div class="mtitle">Personas que atienden</div><div class="msub">Toca un color para cambiarlo</div></div>
+    <button class="xbtn" onclick="cm2('matend')">✕</button>
+  </div>
+  <div class="mbody">
+    <div id="atend-lista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+    <div style="border-top:.5px solid var(--border);padding-top:14px">
+      <label style="display:block;font-size:14px;font-weight:600;color:var(--ink2);margin-bottom:8px">Agregar persona nueva</label>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="nuevo-atend-nombre" placeholder="Nombre" style="flex:1;border:.5px solid var(--border);border-radius:9px;padding:10px 12px;font-size:15px;outline:none;font-family:inherit" onkeydown="if(event.key==='Enter')agregarAtendedorVisual()">
+        <button class="bp" onclick="agregarAtendedorVisual()">Agregar</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -515,7 +544,8 @@ function diasDesdeHoy(fecha){
 }
 
 let currentUser2=null;
-const COLORES_DISPONIBLES=['#2563eb','#059669','#d97706','#dc2626','#7c3aed','#0891b2','#db2777','#65a30d'];
+const COLORES_DISPONIBLES=['#2563eb','#059669','#d97706','#dc2626','#7c3aed','#0891b2','#db2777','#65a30d','#eab308'];
+const NOMBRES_COLORES=['Azul','Verde','Naranja','Rojo','Morado','Celeste','Rosa','Verde oliva','Amarillo'];
 
 function getAtendedores(){
   try{return JSON.parse(localStorage.getItem('hr_atendedores')||'[]');}catch{return[];}
@@ -540,62 +570,84 @@ function populateAtendedores(selValue){
   sel.innerHTML=opts;
   if(selValue)sel.value=selValue;
 }
-const NOMBRES_COLORES=['Azul','Verde','Naranja','Rojo','Morado','Celeste','Rosa','Verde oliva'];
-
-function pedirColor(colorActual){
-  let msg='Elige un color:\n\n'+COLORES_DISPONIBLES.map((c,i)=>`${i+1}. ${NOMBRES_COLORES[i]}`).join('\n')+'\n\nEscribe el número, o cancela para dejarlo automático.';
-  const idx=prompt(msg);
-  if(!idx)return null;
-  const i=parseInt(idx)-1;
-  if(i>=0&&i<COLORES_DISPONIBLES.length)return COLORES_DISPONIBLES[i];
-  return null;
-}
-
 function agregarAtendedor(){
   const nombre=prompt('Nombre de la persona:');
   if(!nombre||!nombre.trim()){populateAtendedores('');return}
   const list=getAtendedores();
   if(list.find(a=>a.nombre===nombre.trim())){toast('Esa persona ya existe');populateAtendedores(nombre.trim());return}
-  const colorElegido=pedirColor();
   const colorUsado=list.map(a=>a.color);
   const colorAuto=COLORES_DISPONIBLES.find(c=>!colorUsado.includes(c))||COLORES_DISPONIBLES[list.length%COLORES_DISPONIBLES.length];
-  list.push({nombre:nombre.trim(),color:colorElegido||colorAuto});
+  list.push({nombre:nombre.trim(),color:colorAuto});
   saveAtendedores(list);
   populateAtendedores(nombre.trim());
-  toast(`${nombre.trim()} agregado con su color ✓`);
+  toast(`${nombre.trim()} agregado — abre el ícono 👤 para elegir su color`);
 }
+
+// --- PANEL VISUAL DE GESTIÓN ---
 function gestionarAtendedores(){
+  renderAtendLista();
+  document.getElementById('nuevo-atend-nombre').value='';
+  document.getElementById('matend').style.display='flex';
+}
+
+function renderAtendLista(){
   const list=getAtendedores();
-  if(!list.length){toast('Aún no hay personas registradas, agrega una primero al crear una reserva');return}
-  let msg='Personas registradas:\n\n'+list.map((a,i)=>`${i+1}. ${a.nombre}`).join('\n')+'\n\nEscribe el número para elegir qué hacer con esa persona.';
-  const idx=prompt(msg);
-  if(idx===null)return;
-  const i=parseInt(idx.trim())-1;
-  if(isNaN(i)||i<0||i>=list.length){toast('Número inválido');return}
-  const accion=prompt(`${list[i].nombre}\n\n1. Cambiar color\n2. Eliminar\n\nEscribe 1 o 2:`);
-  if(accion===null){toast('Cancelado');return}
-  const accionLimpia=accion.trim();
-  if(accionLimpia==='1'){
-    const nuevoColor=pedirColor(list[i].color);
-    if(nuevoColor){
-      list[i].color=nuevoColor;
-      saveAtendedores(list);
-      renderAll();
-      toast('Color actualizado ✓');
-    } else {
-      toast('No se cambió el color');
-    }
-  } else if(accionLimpia==='2'){
-    const ok=confirm(`¿Eliminar a ${list[i].nombre}? Las reservas ya guardadas con su nombre no se verán afectadas.`);
-    if(ok){
-      list.splice(i,1);
-      saveAtendedores(list);
-      renderAll();
-      toast('Eliminado ✓');
-    }
-  } else {
-    toast('Escribe solo 1 o 2');
-  }
+  const cont=document.getElementById('atend-lista');
+  if(!list.length){cont.innerHTML='<div class="empty">Aún no hay personas registradas</div>';return}
+  cont.innerHTML=list.map((a,i)=>`
+    <div>
+      <div class="atend-row">
+        <div class="atend-swatch" style="background:${a.color}" onclick="togglePicker(${i})" title="Cambiar color"></div>
+        <div class="atend-nombre">${a.nombre}</div>
+        <button class="atend-del" onclick="eliminarAtendedor(${i})" title="Eliminar">✕</button>
+      </div>
+      <div class="color-picker-row" id="picker-${i}" style="display:none">
+        ${COLORES_DISPONIBLES.map((c,ci)=>`<div class="color-swatch-opt ${c===a.color?'selected':''}" style="background:${c}" onclick="elegirColorAtendedor(${i},${ci})" title="${NOMBRES_COLORES[ci]}"></div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function togglePicker(i){
+  const el=document.getElementById('picker-'+i);
+  const abierto=el.style.display==='flex';
+  document.querySelectorAll('.color-picker-row').forEach(p=>p.style.display='none');
+  el.style.display=abierto?'none':'flex';
+}
+
+function elegirColorAtendedor(i,colorIdx){
+  const list=getAtendedores();
+  list[i].color=COLORES_DISPONIBLES[colorIdx];
+  saveAtendedores(list);
+  renderAtendLista();
+  renderAll();
+  toast(`Color de ${list[i].nombre} actualizado ✓`);
+}
+
+function eliminarAtendedor(i){
+  const list=getAtendedores();
+  const nombre=list[i].nombre;
+  if(!confirm(`¿Eliminar a ${nombre}? Las reservas ya guardadas con su nombre no se verán afectadas.`))return;
+  list.splice(i,1);
+  saveAtendedores(list);
+  renderAtendLista();
+  renderAll();
+  toast('Eliminado ✓');
+}
+
+function agregarAtendedorVisual(){
+  const input=document.getElementById('nuevo-atend-nombre');
+  const nombre=input.value.trim();
+  if(!nombre){toast('Escribe un nombre');return}
+  const list=getAtendedores();
+  if(list.find(a=>a.nombre===nombre)){toast('Esa persona ya existe');return}
+  const colorUsado=list.map(a=>a.color);
+  const colorAuto=COLORES_DISPONIBLES.find(c=>!colorUsado.includes(c))||COLORES_DISPONIBLES[list.length%COLORES_DISPONIBLES.length];
+  list.push({nombre,color:colorAuto});
+  saveAtendedores(list);
+  input.value='';
+  renderAtendLista();
+  renderAll();
+  toast(`${nombre} agregado ✓`);
 }
 
 function atencionBadge(nombre){
