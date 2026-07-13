@@ -1284,7 +1284,9 @@ async function shareWA(){
       const r=reservas.find(x=>x.id===verResId);
       const llegadaClean=(r?.llegada||'').substring(0,10);
       const salidaClean=(r?.salida||'').substring(0,10);
-      const text=`*RESERVA*\nHab. ${r?.hab||''} — ${r?.nombre||''}\nLlegada: ${fmt(llegadaClean)}${r?.hora?' · '+r.hora:''}\nSalida: ${fmt(salidaClean)}`;
+      const grupoWA=r?.grupoId?reservas.filter(x=>x.grupoId===r.grupoId):[r];
+      const habsWA=grupoWA.map(x=>x.hab).join(', ');
+      const text=`*RESERVA*\nHab. ${habsWA} — ${r?.nombre||''}\nLlegada: ${fmt(llegadaClean)}${r?.hora?' · '+r.hora:''}\nSalida: ${fmt(salidaClean)}`;
       if(navigator.share&&blob){
         try{
           await navigator.share({files:[new File([blob],'reserva.png',{type:'image/png'})],text});
