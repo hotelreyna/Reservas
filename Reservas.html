@@ -446,13 +446,18 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwJb_Gfk4RLm6H4drPvesaLF0b4-X0FqrKZNyIHztRbjPrjR5lEkRDyeQJUxzREFOfw/exec';
 
 const HABS = [
-  {num:'201',tipo:'Matrimonial',tarifa:75},{num:'202',tipo:'Matrimonial',tarifa:75},
-  {num:'204',tipo:'Matrimonial',tarifa:75},{num:'205',tipo:'Matrimonial',tarifa:75},
-  {num:'206',tipo:'Matrimonial',tarifa:75},{num:'207',tipo:'Matrimonial',tarifa:75},
-  {num:'208',tipo:'Matrimonial',tarifa:75},{num:'209',tipo:'Matrimonial',tarifa:75},
-  {num:'305',tipo:'Matrimonial',tarifa:75},{num:'306',tipo:'Matrimonial',tarifa:75},
+  {num:'201',tipo:'Matrimonial',tarifa:75},
+  {num:'204',tipo:'Matrimonial',tarifa:75},
+  {num:'205',tipo:'Matrimonial',tarifa:75},
+  {num:'206',tipo:'Matrimonial',tarifa:75},
+  {num:'306',tipo:'Matrimonial',tarifa:75},
   {num:'307',tipo:'Matrimonial',tarifa:75},
-  {num:'310',tipo:'Matrimonial c/ baño privado',tarifa:65},
+  {num:'208',tipo:'Matrimonial',tarifa:75},
+  {num:'310',tipo:'Matrimonial',tarifa:65},
+  {num:'207',tipo:'Matrimonial con 2 individuales',tarifa:110},
+  {num:'209',tipo:'Matrimonial con 2 individuales',tarifa:110},
+  {num:'202',tipo:'Matrimonial con una individual',tarifa:80},
+  {num:'305',tipo:'Matrimonial con una individual',tarifa:80},
   {num:'308',tipo:'Matrimonial c/ baño compartido',tarifa:45},
   {num:'311',tipo:'Matrimonial c/ baño compartido',tarifa:45},
   {num:'312',tipo:'Matrimonial c/ baño compartido',tarifa:45},
@@ -466,7 +471,8 @@ const HABS = [
 
 const HAB_GRUPOS = [
   {label:'Matrimonial', tipos:['Matrimonial']},
-  {label:'Matrimonial c/ baño privado', tipos:['Matrimonial c/ baño privado']},
+  {label:'Matrimonial con 2 individuales', tipos:['Matrimonial con 2 individuales']},
+  {label:'Matrimonial con una individual', tipos:['Matrimonial con una individual']},
   {label:'Matrimonial c/ baño compartido', tipos:['Matrimonial c/ baño compartido']},
   {label:'Triple', tipos:['Triple']},
   {label:'Doble', tipos:['Doble']},
