@@ -820,10 +820,10 @@ function renderProximas(){
     const habLabel=grupo.length>1?grupo.map(x=>x.hab).join(', '):r.hab;
     const nombreShow=isLoggedIn?(r.nombre||'Sin nombre'):(grupo.length>1?`${grupo.length} habitaciones`:r.tipo);
     return`<div class="prox-item" onclick="verRes('${r.id}')">
-      <div class="prox-badge">${habLabel}</div>
+      <div class="prox-badge" style="${isLoggedIn&&r.atencion?'background:'+colorDeAtendedor(r.atencion):''}">${habLabel}</div>
       <div class="prox-info">
         <div class="prox-nombre">${nombreShow}</div>
-        <div class="prox-meta">${fmt(r.llegada)}${r.salida?' → '+fmt(r.salida):''} · ${n>0?n+' noche'+(n!==1?'s':''):''}${isLoggedIn&&r.hora?' · '+r.hora:''}</div>
+        <div class="prox-meta">${fmt(r.llegada)}${r.salida?' → '+fmt(r.salida):''} · ${n>0?n+' noche'+(n!==1?'s':''):''}${isLoggedIn&&r.hora?' · '+r.hora:''}${isLoggedIn?' · '+atencionBadge(r.atencion):''}</div>
       </div>
       <div class="prox-dias">${dias}</div>
     </div>`;
@@ -971,7 +971,7 @@ function renderDayPanel(ds){
       const saldoClassG=saldoGrupo<=0?'saldo-ok':depGrupo>0?'saldo-pen':'saldo-no';
       const saldoLabelG=saldoGrupo<=0?'Pagado':depGrupo>0?`Saldo S/ ${saldoGrupo.toFixed(2)}`:'Sin depósito';
       return`<div class="rc editable" onclick="verRes('${r.id}')">
-        <div class="rbadge">${items.map(i=>i.hab).join(', ')}</div>
+        <div class="rbadge" style="${r.atencion?'background:'+colorDeAtendedor(r.atencion):''}">${items.map(i=>i.hab).join(', ')}</div>
         <div class="ri">
           <div class="rn">${r.nombre||'Sin nombre'}</div>
           <div class="rm">${items.length} habitaciones (${items.map(i=>i.tipo).join(', ')})<br>
@@ -1000,7 +1000,7 @@ function renderDayPanel(ds){
     const saldoLabel=saldo<=0?'Pagado':dep>0?`Saldo S/ ${saldo.toFixed(2)}`:'Sin depósito';
     const estadoBadge=r.estado==='confirmada'?`<span class="badge-confirmada" style="margin-left:6px">✓ Llegó ${r.horaLlegadaReal||''}</span>`:'';
     return`<div class="rc editable" onclick="verRes('${r.id}')">
-      <div class="rbadge">${r.hab}</div>
+      <div class="rbadge" style="${r.atencion?'background:'+colorDeAtendedor(r.atencion):''}">${r.hab}</div>
       <div class="ri">
         <div class="rn">${r.nombre||'Sin nombre'}</div>
         <div class="rm">${r.tipo} · S/ ${r.tarifa}/noche · ${n} noche${n!==1?'s':''}${campoFaltante(r.salida,'fecha de salida')}<br>
