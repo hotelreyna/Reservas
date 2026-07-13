@@ -569,25 +569,32 @@ function gestionarAtendedores(){
   if(!list.length){toast('Aún no hay personas registradas, agrega una primero al crear una reserva');return}
   let msg='Personas registradas:\n\n'+list.map((a,i)=>`${i+1}. ${a.nombre}`).join('\n')+'\n\nEscribe el número para elegir qué hacer con esa persona.';
   const idx=prompt(msg);
-  if(!idx)return;
-  const i=parseInt(idx)-1;
-  if(i<0||i>=list.length)return;
+  if(idx===null)return;
+  const i=parseInt(idx.trim())-1;
+  if(isNaN(i)||i<0||i>=list.length){toast('Número inválido');return}
   const accion=prompt(`${list[i].nombre}\n\n1. Cambiar color\n2. Eliminar\n\nEscribe 1 o 2:`);
-  if(accion==='1'){
+  if(accion===null){toast('Cancelado');return}
+  const accionLimpia=accion.trim();
+  if(accionLimpia==='1'){
     const nuevoColor=pedirColor(list[i].color);
     if(nuevoColor){
       list[i].color=nuevoColor;
       saveAtendedores(list);
       renderAll();
       toast('Color actualizado ✓');
+    } else {
+      toast('No se cambió el color');
     }
-  } else if(accion==='2'){
-    if(confirm(`¿Eliminar a ${list[i].nombre}?`)){
+  } else if(accionLimpia==='2'){
+    const ok=confirm(`¿Eliminar a ${list[i].nombre}? Las reservas ya guardadas con su nombre no se verán afectadas.`);
+    if(ok){
       list.splice(i,1);
       saveAtendedores(list);
       renderAll();
       toast('Eliminado ✓');
     }
+  } else {
+    toast('Escribe solo 1 o 2');
   }
 }
 
