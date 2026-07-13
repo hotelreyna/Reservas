@@ -208,6 +208,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
   <div class="brand">📋 Reservas</div>
   <div class="topbar-right">
     <div class="sync"><div class="sdot" id="sd"></div><span id="sl">Conectando…</span></div>
+    <button class="session-btn edit-only" id="atendedores-btn" onclick="gestionarAtendedores()" style="display:none">👤</button>
     <button class="session-btn edit-only" id="cfg-btn" onclick="showCfg()" style="display:none">⚙️</button>
     <button class="session-btn" id="session-btn" onclick="toggleSession()">🔒 Ingresar</button>
   </div>
@@ -344,7 +345,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
 
     <div class="field">
       <label>Quién atendió</label>
-      <input type="text" id="f-atencion" placeholder="Nombre de quien registra">
+      <select id="f-atencion" onchange="if(this.value==='__nuevo__')agregarAtendedor()"></select>
     </div>
 
     <!-- FINANCIERO -->
@@ -500,7 +501,105 @@ function fmt(s){
 }
 function fmtHora(h){if(!h)return'—';return h}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2)}
-function nights(a,b){return a&&b?Math.max(0,Math.round((new Date(b)-new Date(a))/86400000)):0}
+function nights(a,b){
+  if(!a)return 0;
+  if(!b)return 1; // sin fecha de salida: se asume 1 noche para el cálculo, se corrige después
+  return Math.max(0,Math.round((new Date(b)-new Date(a))/86400000));
+}
+function diasDesdeHoy(fecha){
+  const[y1,m1,d1]=today.split('-').map(Number);
+  const[y2,m2,d2]=fecha.split('-').map(Number);
+  const t1=Date.UTC(y1,m1-1,d1);
+  const t2=Date.UTC(y2,m2-1,d2);
+  return Math.round((t2-t1)/86400000);
+}
+
+let currentUser2=null;
+const COLORES_DISPONIBLES=['#2563eb','#059669','#d97706','#dc2626','#7c3aed','#0891b2','#db2777','#65a30d'];
+
+function getAtendedores(){
+  try{return JSON.parse(localStorage.getItem('hr_atendedores')||'[]');}catch{return[];}
+}
+function saveAtendedores(list){
+  localStorage.setItem('hr_atendedores',JSON.stringify(list));
+}
+function colorDeAtendedor(nombre){
+  const list=getAtendedores();
+  const found=list.find(a=>a.nombre===nombre);
+  return found?found.color:'#9090aa';
+}
+function populateAtendedores(selValue){
+  const sel=document.getElementById('f-atencion');
+  if(!sel)return;
+  const list=getAtendedores();
+  let opts=list.map(a=>`<option value="${a.nombre}" ${a.nombre===selValue?'selected':''}>${a.nombre}</option>`).join('');
+  if(selValue && !list.find(a=>a.nombre===selValue)){
+    opts+=`<option value="${selValue}" selected>${selValue}</option>`;
+  }
+  opts+='<option value="">— Sin asignar —</option><option value="__nuevo__">+ Agregar persona nueva…</option>';
+  sel.innerHTML=opts;
+  if(selValue)sel.value=selValue;
+}
+const NOMBRES_COLORES=['Azul','Verde','Naranja','Rojo','Morado','Celeste','Rosa','Verde oliva'];
+
+function pedirColor(colorActual){
+  let msg='Elige un color:\n\n'+COLORES_DISPONIBLES.map((c,i)=>`${i+1}. ${NOMBRES_COLORES[i]}`).join('\n')+'\n\nEscribe el número, o cancela para dejarlo automático.';
+  const idx=prompt(msg);
+  if(!idx)return null;
+  const i=parseInt(idx)-1;
+  if(i>=0&&i<COLORES_DISPONIBLES.length)return COLORES_DISPONIBLES[i];
+  return null;
+}
+
+function agregarAtendedor(){
+  const nombre=prompt('Nombre de la persona:');
+  if(!nombre||!nombre.trim()){populateAtendedores('');return}
+  const list=getAtendedores();
+  if(list.find(a=>a.nombre===nombre.trim())){toast('Esa persona ya existe');populateAtendedores(nombre.trim());return}
+  const colorElegido=pedirColor();
+  const colorUsado=list.map(a=>a.color);
+  const colorAuto=COLORES_DISPONIBLES.find(c=>!colorUsado.includes(c))||COLORES_DISPONIBLES[list.length%COLORES_DISPONIBLES.length];
+  list.push({nombre:nombre.trim(),color:colorElegido||colorAuto});
+  saveAtendedores(list);
+  populateAtendedores(nombre.trim());
+  toast(`${nombre.trim()} agregado con su color ✓`);
+}
+function gestionarAtendedores(){
+  const list=getAtendedores();
+  if(!list.length){toast('Aún no hay personas registradas, agrega una primero al crear una reserva');return}
+  let msg='Personas registradas:\n\n'+list.map((a,i)=>`${i+1}. ${a.nombre}`).join('\n')+'\n\nEscribe el número para elegir qué hacer con esa persona.';
+  const idx=prompt(msg);
+  if(!idx)return;
+  const i=parseInt(idx)-1;
+  if(i<0||i>=list.length)return;
+  const accion=prompt(`${list[i].nombre}\n\n1. Cambiar color\n2. Eliminar\n\nEscribe 1 o 2:`);
+  if(accion==='1'){
+    const nuevoColor=pedirColor(list[i].color);
+    if(nuevoColor){
+      list[i].color=nuevoColor;
+      saveAtendedores(list);
+      renderAll();
+      toast('Color actualizado ✓');
+    }
+  } else if(accion==='2'){
+    if(confirm(`¿Eliminar a ${list[i].nombre}?`)){
+      list.splice(i,1);
+      saveAtendedores(list);
+      renderAll();
+      toast('Eliminado ✓');
+    }
+  }
+}
+
+function atencionBadge(nombre){
+  if(!nombre)return `<span style="color:#dc2626;font-weight:600">⚠ Sin asignar</span>`;
+  const color=colorDeAtendedor(nombre);
+  return `<span style="display:inline-flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block"></span>${nombre}</span>`;
+}
+function campoFaltante(valor,etiqueta){
+  if(valor)return '';
+  return `<span style="color:#dc2626;font-weight:600"> · ⚠ Falta ${etiqueta}</span>`;
+}
 
 // SESSION
 function initSession(){
@@ -714,7 +813,7 @@ function renderProximas(){
     return;
   }
   list.innerHTML=proximas.map(r=>{
-    const d=Math.round((new Date(r.llegada)-hoy)/86400000);
+    const d=diasDesdeHoy(r.llegada);
     const dias=d===0?'Hoy':d===1?'Mañana':`En ${d} días`;
     const n=nights(r.llegada,r.salida);
     const grupo=r.grupoId?reservas.filter(x=>x.grupoId===r.grupoId):[r];
@@ -877,7 +976,7 @@ function renderDayPanel(ds){
           <div class="rn">${r.nombre||'Sin nombre'}</div>
           <div class="rm">${items.length} habitaciones (${items.map(i=>i.tipo).join(', ')})<br>
           ${fmt(r.llegada)}${r.salida?' → '+fmt(r.salida):''}<br>
-          📞 ${r.contacto||'—'} · Atendió: ${r.atencion||'—'}</div>
+          📞 ${r.contacto||'—'} · Atendió: ${atencionBadge(r.atencion)}</div>
           <span class="saldo-badge ${saldoClassG}">${saldoLabelG}</span>
         </div>
       </div>`;
@@ -904,9 +1003,9 @@ function renderDayPanel(ds){
       <div class="rbadge">${r.hab}</div>
       <div class="ri">
         <div class="rn">${r.nombre||'Sin nombre'}</div>
-        <div class="rm">${r.tipo} · S/ ${r.tarifa}/noche · ${n} noche${n!==1?'s':''}<br>
+        <div class="rm">${r.tipo} · S/ ${r.tarifa}/noche · ${n} noche${n!==1?'s':''}${campoFaltante(r.salida,'fecha de salida')}<br>
         ${fmt(r.llegada)}${r.salida?' → '+fmt(r.salida):''} · ${r.hora?'🕐 '+r.hora:''}<br>
-        📞 ${r.contacto||'—'} · Atendió: ${r.atencion||'—'}</div>
+        📞 ${r.contacto||'—'}${campoFaltante(r.contacto,'contacto')} · Atendió: ${atencionBadge(r.atencion)}</div>
         <span class="saldo-badge ${saldoClass}">${saldoLabel}</span>${estadoBadge}
       </div>
     </div>`;
@@ -1033,7 +1132,7 @@ function oRes(id, prefill){
     document.getElementById('f-salida').value=r.salida||'';
     document.getElementById('f-fechares').value=r.fechares||'';
     document.getElementById('f-hora').value=r.hora||'';
-    document.getElementById('f-atencion').value=r.atencion||'';
+    populateAtendedores(r.atencion||'');
     document.getElementById('f-dep-monto').value=r.depMonto||'';
     document.getElementById('f-dep-fecha').value=r.depFecha||'';
     document.getElementById('f-dep-tipo').value=r.depTipo||'';
@@ -1048,13 +1147,14 @@ function oRes(id, prefill){
     document.getElementById('mres-t').textContent='Nueva reserva';
     document.getElementById('mres-s').textContent=selDay?`Llegada: ${fmt(selDay)}`:'';
     document.getElementById('res-del-btn').style.display='none';
+    populateAtendedores('');
     if(selDay){document.getElementById('f-llegada').value=selDay;}
     document.getElementById('f-fechares').value=today;
     document.getElementById('f-dep-fecha').value=today;
     if(prefill){
       document.getElementById('f-nombre').value=prefill.nombre||'';
       document.getElementById('f-contacto').value=prefill.contacto||'';
-      document.getElementById('f-atencion').value=prefill.atencion||'';
+      populateAtendedores(prefill.atencion||'');
       document.getElementById('f-llegada').value=prefill.llegada||selDay||'';
       document.getElementById('f-salida').value=prefill.salida||'';
       document.getElementById('f-fechares').value=prefill.fechares||today;
@@ -1268,7 +1368,7 @@ function verRes(id){
         <div class="v-section">
           <div class="v-pair">
             <div><div class="v-mini-label">Habitación${esMultiple?'es':''}</div><div class="v-mini-val">${tituloHab}</div></div>
-            <div><div class="v-mini-label">Atendió</div><div class="v-mini-val">${r.atencion||'—'}</div></div>
+            <div><div class="v-mini-label">Atendió</div><div class="v-mini-val">${atencionBadge(r.atencion)}</div></div>
           </div>
           ${r.notas?`<div style="margin-top:8px"><div class="v-mini-label">Notas</div><div class="v-mini-val" style="font-weight:500">${r.notas}</div></div>`:''}
         </div>
