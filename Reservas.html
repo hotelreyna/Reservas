@@ -198,6 +198,13 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
 .color-swatch-opt{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .1s}
 .color-swatch-opt:hover{transform:scale(1.15)}
 .color-swatch-opt.selected{border-color:#1a1a2e}
+.hab-chip-pick{padding:8px 13px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;border:.5px solid var(--border);background:var(--surface);color:var(--ink2);transition:all .12s}
+.hab-chip-pick:hover{border-color:#93c5fd}
+.hab-chip-pick.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+.hab-chip-pick.occ{opacity:.4;cursor:not-allowed;text-decoration:line-through}
+.hab-tarifa-row{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:9px;padding:9px 12px}
+.hab-tarifa-row .lbl{flex:1;font-size:14px;font-weight:600;color:var(--ink)}
+.hab-tarifa-row input{width:80px;border:.5px solid var(--border);border-radius:7px;padding:6px 9px;font-size:14px;text-align:right}
 .section-label{font-size:13px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
 .sep{border:none;border-top:.5px solid var(--border);margin:16px 0}
 
@@ -315,20 +322,26 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
   </div>
   <div class="mbody">
 
-    <div class="field">
+    <div class="field" id="hab-single-wrap">
       <label>Habitación</label>
       <select id="f-hab" onchange="onHabChange()"></select>
+    </div>
+
+    <div class="field" id="hab-multi-wrap" style="display:none">
+      <label>Habitaciones (toca todas las que reserve este huésped)</label>
+      <div id="hab-chips-picker" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px"></div>
+      <div id="hab-multi-tarifas" style="display:flex;flex-direction:column;gap:8px"></div>
     </div>
     <div id="grupo-info" style="display:none;background:#eff6ff;border:.5px solid #bfdbfe;border-radius:9px;padding:10px 13px;margin-bottom:14px;font-size:13px;color:var(--accent2)"></div>
 
     <div class="r2">
       <div class="field">
         <label>Fecha de llegada</label>
-        <input type="date" id="f-llegada" onchange="calcFinanciero()">
+        <input type="date" id="f-llegada" onchange="calcFinanciero();refrescarPickerSiCorresponde()">
       </div>
       <div class="field">
         <label>Fecha de salida</label>
-        <input type="date" id="f-salida" onchange="calcFinanciero()">
+        <input type="date" id="f-salida" onchange="calcFinanciero();refrescarPickerSiCorresponde()">
       </div>
     </div>
 
@@ -412,7 +425,6 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
   </div>
   <div class="mfoot">
     <div class="ml"><button class="bd" id="res-del-btn" style="display:none" onclick="delRes()">Eliminar reserva</button></div>
-    <button class="bs" id="btn-otra-hab" onclick="guardarYAgregarOtra()" style="display:none">+ Otra habitación (mismo huésped)</button>
     <button class="bs" onclick="cm2('mres')">Cancelar</button>
     <button class="bp" onclick="sRes()">Guardar reserva</button>
   </div>
@@ -515,6 +527,7 @@ const DAYS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 let reservas=[], cMonth=new Date().getMonth(), cYear=new Date().getFullYear();
 let selDay=null, editResId=null, verResId=null;
 let isLoggedIn=false, failCount=0, syncTmr=null, fotosArray=[];
+let habsMultiSel=[], habsMultiTarifas={}, grupoActualIds=[];
 const today=toStr(new Date());
 
 function pad(n){return String(n).padStart(2,'0')}
@@ -1079,6 +1092,81 @@ function onHabChange(){
   calcFinanciero();
 }
 
+// --- SELECTOR MÚLTIPLE DE HABITACIONES (solo para reservas nuevas) ---
+function refrescarPickerSiCorresponde(){
+  const multiWrap=document.getElementById('hab-multi-wrap');
+  if(multiWrap&&multiWrap.style.display!=='none')renderHabChipsPicker();
+}
+
+function habsOcupadasEnRango(){
+  const llegada=document.getElementById('f-llegada').value;
+  const salida=document.getElementById('f-salida').value;
+  if(!llegada)return new Set();
+  const misPropiasIds=grupoActualIds||[];
+  const ocupadas=new Set();
+  reservas.forEach(r=>{
+    if(!r.llegada)return;
+    if(misPropiasIds.includes(r.id))return;
+    const rSalida=r.salida||r.llegada;
+    const miSalida=salida||llegada;
+    if(llegada<rSalida && miSalida>r.llegada) ocupadas.add(r.hab);
+  });
+  return ocupadas;
+}
+
+function renderHabChipsPicker(){
+  const cont=document.getElementById('hab-chips-picker');
+  if(!cont)return;
+  const ocupadas=habsOcupadasEnRango();
+  habsMultiSel=habsMultiSel.filter(h=>!ocupadas.has(h));
+  cont.innerHTML=HABS.map(h=>{
+    const occ=ocupadas.has(h.num);
+    const sel=habsMultiSel.includes(h.num);
+    return `<div class="hab-chip-pick ${sel?'sel':''} ${occ?'occ':''}" ${occ?'':`onclick="toggleHabMulti('${h.num}')"`} title="${occ?'Ocupada en esas fechas':h.tipo}">${h.num}</div>`;
+  }).join('');
+  renderHabMultiTarifas();
+}
+
+function toggleHabMulti(num){
+  const idx=habsMultiSel.indexOf(num);
+  if(idx>=0){
+    habsMultiSel.splice(idx,1);
+    delete habsMultiTarifas[num];
+  } else {
+    habsMultiSel.push(num);
+    const hab=HABS.find(h=>h.num===num);
+    habsMultiTarifas[num]=hab?hab.tarifa:0;
+  }
+  renderHabChipsPicker();
+}
+
+function renderHabMultiTarifas(){
+  const cont=document.getElementById('hab-multi-tarifas');
+  if(!cont)return;
+  if(!habsMultiSel.length){cont.innerHTML='<div class="empty" style="padding:10px">Toca las habitaciones que reserve este huésped</div>';calcFinancieroMulti();return}
+  cont.innerHTML=habsMultiSel.map(num=>{
+    const hab=HABS.find(h=>h.num===num);
+    return `<div class="hab-tarifa-row"><div class="lbl">Hab. ${num} · ${hab?hab.tipo:''}</div><input type="number" value="${habsMultiTarifas[num]}" min="0" step="0.5" onchange="habsMultiTarifas['${num}']=parseFloat(this.value)||0;calcFinancieroMulti()"></div>`;
+  }).join('');
+  calcFinancieroMulti();
+}
+
+function calcFinancieroMulti(){
+  const llegada=document.getElementById('f-llegada').value;
+  const salida=document.getElementById('f-salida').value;
+  const n=nights(llegada,salida);
+  const totalHabs=habsMultiSel.reduce((s,num)=>s+(habsMultiTarifas[num]||0),0);
+  const total=totalHabs*n;
+  document.getElementById('fin-noches').textContent=n;
+  document.getElementById('fin-total').textContent=`S/ ${total.toFixed(2)}`;
+  const dep=parseFloat(document.getElementById('f-dep-monto').value)||0;
+  const saldo=total-dep;
+  const sr=document.getElementById('saldo-row');
+  const sf=document.getElementById('fin-saldo');
+  if(saldo<=0){sr.className='fin-row saldo ok';sf.textContent='S/ 0.00 (Pagado)';}
+  else{sr.className='fin-row saldo';sf.textContent=`S/ ${saldo.toFixed(2)}`;}
+}
+
 function calcFinanciero(){
   const llegada=document.getElementById('f-llegada').value;
   const salida=document.getElementById('f-salida').value;
@@ -1168,23 +1256,26 @@ function oRes(id, prefill){
   document.getElementById('f-dep-tipo').onchange=function(){
     document.getElementById('dep-otro-field').style.display=this.value==='otro'?'':'none';
   };
-  ['f-nombre','f-contacto','f-llegada','f-salida','f-fechares','f-hora','f-atencion','f-dep-monto','f-dep-fecha','f-dep-otro','f-notas'].forEach(x=>document.getElementById(x).value='');
-  populateHabs(null);
-  document.getElementById('f-tarifa').value='';
-  document.getElementById('fin-noches').textContent='0';
-  document.getElementById('fin-total').textContent='S/ 0.00';
-  document.getElementById('fin-saldo').textContent='S/ 0.00';
+  ['f-nombre','f-contacto','f-llegada','f-salida','f-fechares','f-hora','f-dep-monto','f-dep-fecha','f-dep-otro','f-notas'].forEach(x=>document.getElementById(x).value='');
   document.getElementById('grupo-info').style.display='none';
-  document.getElementById('btn-otra-hab').style.display='none';
+  document.getElementById('hab-single-wrap').style.display='none';
+  document.getElementById('hab-multi-wrap').style.display='';
+  habsMultiSel=[];
+  habsMultiTarifas={};
+  grupoActualIds=[];
   currentGrupoId=null;
 
   if(id){
+    // EDITAR: cargar todo el grupo de esta reserva (una o varias habitaciones)
     const r=reservas.find(x=>x.id===id);if(!r)return;
+    const grupo=r.grupoId?reservas.filter(x=>x.grupoId===r.grupoId):[r];
+    grupoActualIds=grupo.map(x=>x.id);
+    currentGrupoId=r.grupoId||uid();
+
     document.getElementById('mres-t').textContent='Editar reserva';
-    document.getElementById('mres-s').textContent=`Hab. ${r.hab} · ${r.nombre}`;
+    document.getElementById('mres-s').textContent=grupo.length>1?`${grupo.length} habitaciones · ${r.nombre}`:`Hab. ${r.hab} · ${r.nombre}`;
     document.getElementById('res-del-btn').style.display='';
-    populateHabs(r.hab);
-    document.getElementById('f-tarifa').value=r.tarifa||'';
+
     document.getElementById('f-nombre').value=r.nombre||'';
     document.getElementById('f-contacto').value=r.contacto||'';
     document.getElementById('f-llegada').value=r.llegada||'';
@@ -1192,41 +1283,37 @@ function oRes(id, prefill){
     document.getElementById('f-fechares').value=r.fechares||'';
     document.getElementById('f-hora').value=r.hora||'';
     populateAtendedores(r.atencion||'');
-    document.getElementById('f-dep-monto').value=r.depMonto||'';
-    document.getElementById('f-dep-fecha').value=r.depFecha||'';
-    document.getElementById('f-dep-tipo').value=r.depTipo||'';
     document.getElementById('f-notas').value=r.notas||'';
-    try{fotosArray=r.depFoto?JSON.parse(r.depFoto):[];}catch{fotosArray=r.depFoto?[r.depFoto]:[];}
+
+    // Depósito: tomar del registro del grupo que tenga monto (normalmente el primero)
+    const conDeposito=grupo.find(x=>x.depMonto)||r;
+    document.getElementById('f-dep-monto').value=conDeposito.depMonto||'';
+    document.getElementById('f-dep-fecha').value=conDeposito.depFecha||'';
+    document.getElementById('f-dep-tipo').value=conDeposito.depTipo||'';
+    try{fotosArray=conDeposito.depFoto?JSON.parse(conDeposito.depFoto):[];}catch{fotosArray=conDeposito.depFoto?[conDeposito.depFoto]:[];}
     renderFotosGrid();
-    currentGrupoId=r.grupoId||null;
-    if(currentGrupoId)mostrarInfoGrupo(currentGrupoId,id);
-    document.getElementById('btn-otra-hab').style.display='';
-    calcFinanciero();
+
+    habsMultiSel=grupo.map(x=>x.hab);
+    grupo.forEach(x=>{habsMultiTarifas[x.hab]=parseFloat(x.tarifa)||0;});
+    renderHabChipsPicker();
   } else {
+    // NUEVA RESERVA
     document.getElementById('mres-t').textContent='Nueva reserva';
     document.getElementById('mres-s').textContent=selDay?`Llegada: ${fmt(selDay)}`:'';
     document.getElementById('res-del-btn').style.display='none';
-    populateAtendedores('');
-    if(selDay){document.getElementById('f-llegada').value=selDay;}
-    document.getElementById('f-fechares').value=today;
-    document.getElementById('f-dep-fecha').value=today;
+    populateAtendedores(prefill?.atencion||'');
     if(prefill){
       document.getElementById('f-nombre').value=prefill.nombre||'';
       document.getElementById('f-contacto').value=prefill.contacto||'';
-      populateAtendedores(prefill.atencion||'');
       document.getElementById('f-llegada').value=prefill.llegada||selDay||'';
       document.getElementById('f-salida').value=prefill.salida||'';
       document.getElementById('f-fechares').value=prefill.fechares||today;
-      currentGrupoId=prefill.grupoId;
-      mostrarInfoGrupo(currentGrupoId,null);
-      document.getElementById('btn-otra-hab').style.display='';
-      if(prefill.depTipoCompartido)document.getElementById('f-dep-tipo').value=prefill.depTipoCompartido;
-      if(prefill.fotosCompartidas&&prefill.fotosCompartidas.length){
-        document.getElementById('grupo-info').style.display='';
-        document.getElementById('grupo-info').innerHTML+='<div style="margin-top:6px">📷 El depósito y la captura ya se guardaron en la habitación anterior. Deja el monto en 0 aquí si es el mismo pago, o ingresa uno nuevo si es distinto.</div>';
-      }
+    } else {
+      if(selDay){document.getElementById('f-llegada').value=selDay;}
+      document.getElementById('f-fechares').value=today;
+      document.getElementById('f-dep-fecha').value=today;
     }
-    onHabChange();
+    renderHabChipsPicker();
   }
   document.getElementById('mres').style.display='flex';
 }
@@ -1242,28 +1329,82 @@ function mostrarInfoGrupo(grupoId,excludeId){
   }
 }
 
-async function guardarYAgregarOtra(){
+// (guardarYAgregarOtra ya no se usa: el selector múltiple de habitaciones reemplaza este flujo)
+
+async function sResMulti(silent){
   const nombre=document.getElementById('f-nombre').value.trim();
-  if(!nombre){toast('Ingresa el nombre del huésped primero');return}
-  const fotosActuales=[...fotosArray];
-  const depTipoActual=document.getElementById('f-dep-tipo').value;
-  await sRes(true);
-  const prefill={
-    nombre,
-    contacto:document.getElementById('f-contacto').value.trim(),
-    atencion:document.getElementById('f-atencion').value.trim(),
-    llegada:document.getElementById('f-llegada').value,
-    salida:document.getElementById('f-salida').value,
-    fechares:document.getElementById('f-fechares').value,
-    grupoId:currentGrupoId,
-    fotosCompartidas:fotosActuales,
-    depTipoCompartido:depTipoActual
-  };
-  oRes(null,prefill);
-  toast('Habitación guardada — el depósito y la foto ya quedaron en la primera. Deja el depósito en 0 en esta si es el mismo pago.');
+  const llegada=document.getElementById('f-llegada').value;
+  if(!nombre){toast('Ingresa el nombre del huésped');return}
+  if(!llegada){toast('Ingresa la fecha de llegada');return}
+  if(!habsMultiSel.length){toast('Toca al menos una habitación');return}
+
+  const contacto=document.getElementById('f-contacto').value.trim();
+  const salida=document.getElementById('f-salida').value||'';
+  const fechares=document.getElementById('f-fechares').value||today;
+  const hora=document.getElementById('f-hora').value||'';
+  const atencion=document.getElementById('f-atencion').value.trim();
+  const notas=document.getElementById('f-notas').value.trim();
+  const depTipoVal=document.getElementById('f-dep-tipo').value;
+  const depTipo=depTipoVal==='otro'?document.getElementById('f-dep-otro').value:depTipoVal;
+  const depMontoTotal=document.getElementById('f-dep-monto').value||'';
+  const depFecha=document.getElementById('f-dep-fecha').value||'';
+  const fotosJson=fotosArray.length?JSON.stringify(fotosArray):'';
+
+  const esEdicion=grupoActualIds.length>0;
+  const grupoId=currentGrupoId||uid();
+
+  // Reservas originales del grupo, para reutilizar su id según la habitación
+  const originales=grupoActualIds.map(gid=>reservas.find(x=>x.id===gid)).filter(Boolean);
+
+  const nuevasReservas=habsMultiSel.map((num,i)=>{
+    const habInfo=HABS.find(h=>h.num===num);
+    const original=originales.find(o=>o.hab===num);
+    return{
+      id:original?original.id:uid(),
+      grupoId,
+      hab:num,
+      tipo:habInfo?.tipo||'',
+      tarifa:habsMultiTarifas[num]||habInfo?.tarifa||'',
+      nombre,contacto,llegada,salida,fechares,hora,atencion,
+      // el depósito completo se registra solo en la primera habitación, para no duplicar el total
+      depMonto:i===0?depMontoTotal:'',
+      depFecha:i===0?depFecha:'',
+      depTipo:i===0?depTipo:'',
+      depFoto:i===0?fotosJson:'',
+      notas,
+      estado:(original&&original.estado)||'pendiente',
+      horaLlegadaReal:(original&&original.horaLlegadaReal)||'',
+    };
+  });
+
+  // Habitaciones que estaban en el grupo original pero ya no están seleccionadas: eliminar
+  const idsAEliminar=originales.filter(o=>!habsMultiSel.includes(o.hab)).map(o=>o.id);
+
+  // Actualizar array local: quitar todo lo viejo del grupo, meter lo nuevo
+  reservas=reservas.filter(x=>!grupoActualIds.includes(x.id));
+  nuevasReservas.forEach(r=>reservas.push(r));
+  localStorage.setItem('hr_reservas',JSON.stringify(reservas));
+  cm2('mres');renderAll();if(selDay)renderDayPanel(selDay);
+
+  ss('load',`Guardando ${nuevasReservas.length} habitación${nuevasReservas.length!==1?'es':''}…`);
+  try{
+    for(const r of nuevasReservas){
+      await apiP({action:'saveReserva',data:r});
+    }
+    for(const idDel of idsAEliminar){
+      await apiP({action:'deleteReserva',id:idDel});
+    }
+    ss('ok',`Guardado ${new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'})}`);
+    toast(`${nuevasReservas.length} habitación${nuevasReservas.length!==1?'es':''} guardada${nuevasReservas.length!==1?'s':''} ✓`);
+  }catch(e){
+    ss('err','Error al guardar');
+    toast('Guardado localmente, revisa tu conexión');
+  }
 }
 
 async function sRes(silent){
+  const modoMulti=document.getElementById('hab-multi-wrap').style.display!=='none';
+  if(modoMulti){return sResMulti(silent)}
   const nombre=document.getElementById('f-nombre').value.trim();
   const hab=document.getElementById('f-hab').value;
   const llegada=document.getElementById('f-llegada').value;
@@ -1311,13 +1452,16 @@ async function sRes(silent){
 }
 
 async function delRes(){
-  if(!confirm('¿Eliminar esta reserva?'))return;
-  const id=editResId;
-  reservas=reservas.filter(x=>x.id!==id);
+  const idsAEliminar=grupoActualIds.length?grupoActualIds:[editResId];
+  const msg=idsAEliminar.length>1?`¿Eliminar las ${idsAEliminar.length} habitaciones de esta reserva?`:'¿Eliminar esta reserva?';
+  if(!confirm(msg))return;
+  reservas=reservas.filter(x=>!idsAEliminar.includes(x.id));
   localStorage.setItem('hr_reservas',JSON.stringify(reservas));
   cm2('mres');renderAll();
-  try{await apiP({action:'deleteReserva',id});toast('Reserva eliminada');}
-  catch{toast('Eliminada localmente');}
+  try{
+    for(const id of idsAEliminar){await apiP({action:'deleteReserva',id});}
+    toast('Reserva eliminada');
+  }catch{toast('Eliminada localmente');}
 }
 
 // VER / VOUCHER
