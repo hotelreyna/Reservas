@@ -232,6 +232,15 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
 
 <div class="main">
 
+  <!-- SELECTOR DE VISTA -->
+  <div style="display:flex;gap:6px;margin-bottom:16px">
+    <button class="session-btn active" id="tab-cal" onclick="cambiarVistaPrincipal('cal',this)" style="flex:1;justify-content:center">📅 Calendario</button>
+    <button class="session-btn" id="tab-estado" onclick="cambiarVistaPrincipal('estado',this)" style="flex:1;justify-content:center">🏨 Estado del hotel</button>
+  </div>
+
+  <!-- VISTA CALENDARIO (contenido existente) -->
+  <div id="vista-calendario">
+
   <!-- BUSCADOR -->
   <div class="card" style="margin-bottom:16px">
     <input type="text" id="global-search" placeholder="🔍 Buscar por nombre o número de habitación…" oninput="renderBusqueda()" style="width:100%;border:.5px solid var(--border);border-radius:9px;padding:11px 14px;font-size:15px;outline:none;font-family:inherit">
@@ -295,6 +304,30 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0f5;color:#1a
       <div class="section-label">Reservas del día</div>
       <div class="rlist" id="day-rlist"></div>
     </div>
+  </div>
+
+  </div><!-- fin vista-calendario -->
+
+  <!-- VISTA ESTADO DEL HOTEL -->
+  <div id="vista-estado" style="display:none">
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <label style="font-size:14px;font-weight:600;color:var(--ink2)">Ver estado del día:</label>
+        <input type="date" id="estado-fecha" style="border:.5px solid var(--border);border-radius:9px;padding:7px 11px;font-size:14px;outline:none;font-family:inherit" onchange="onFechaEstadoChange()">
+        <button class="session-btn" onclick="irAHoyEstado()">Hoy</button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;gap:16px">
+          <div><span style="font-size:22px;font-weight:700;color:#166534" id="estado-libres">0</span> <span style="font-size:13px;color:var(--ink3)">libres</span></div>
+          <div><span style="font-size:22px;font-weight:700;color:#991b1b" id="estado-ocupadas">0</span> <span style="font-size:13px;color:var(--ink3)">ocupadas</span></div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="session-btn active" id="subtab-tipo" onclick="cambiarSubvistaEstado('tipo',this)">Por tipo</button>
+          <button class="session-btn" id="subtab-num" onclick="cambiarSubvistaEstado('numero',this)">Por número</button>
+        </div>
+      </div>
+    </div>
+    <div id="estado-contenido"></div>
   </div>
 
   <!-- CONFIG -->
@@ -797,6 +830,91 @@ function renderAll(){
   renderCalMobile();
   if(selDay)renderDayPanel(selDay);
   renderBusqueda();
+  renderEstadoHotel();
+}
+
+// ============ VISTA: ESTADO DEL HOTEL ============
+let subvistaEstadoActual='tipo';
+
+function cambiarVistaPrincipal(vista,btn){
+  document.getElementById('vista-calendario').style.display=vista==='cal'?'':'none';
+  document.getElementById('vista-estado').style.display=vista==='estado'?'':'none';
+  document.getElementById('tab-cal').classList.toggle('active',vista==='cal');
+  document.getElementById('tab-estado').classList.toggle('active',vista==='estado');
+  if(vista==='estado'){
+    if(!document.getElementById('estado-fecha').value)document.getElementById('estado-fecha').value=today;
+    renderEstadoHotel();
+  }
+}
+
+function onFechaEstadoChange(){
+  renderEstadoHotel();
+}
+
+function irAHoyEstado(){
+  document.getElementById('estado-fecha').value=today;
+  renderEstadoHotel();
+}
+
+function cambiarSubvistaEstado(sub,btn){
+  subvistaEstadoActual=sub;
+  document.getElementById('subtab-tipo').classList.toggle('active',sub==='tipo');
+  document.getElementById('subtab-num').classList.toggle('active',sub==='numero');
+  renderEstadoHotel();
+}
+
+function fechaEstadoSeleccionada(){
+  const el=document.getElementById('estado-fecha');
+  return (el&&el.value)?el.value:today;
+}
+
+function habInfoEnFecha(numHab,fecha){
+  const ocupante=reservas.find(r=>{
+    if(r.hab!==numHab||!r.llegada)return false;
+    const salida=r.salida||r.llegada;
+    return r.llegada<=fecha && salida>fecha;
+  });
+  return ocupante||null;
+}
+
+function tarjetaEstadoHTML(h){
+  const fecha=fechaEstadoSeleccionada();
+  const ocupante=habInfoEnFecha(h.num,fecha);
+  if(!ocupante){
+    return `<div class="hab-chip hab-free" style="min-width:90px">${h.num}<div class="hab-tipo">Libre</div></div>`;
+  }
+  const salidaTxt=ocupante.salida?fmt(ocupante.salida):'Sin fecha definida';
+  const nombreShow=isLoggedIn?(ocupante.nombre||'Sin nombre'):'Ocupada';
+  return `<div class="hab-chip hab-occ" style="min-width:120px;cursor:pointer" onclick="verRes('${ocupante.id}')">
+    <div style="font-weight:700">${h.num}</div>
+    <div class="hab-tipo" style="font-weight:600">${nombreShow}</div>
+    ${isLoggedIn?`<div class="hab-tipo" style="font-size:10px">Sale: ${salidaTxt}</div>`:''}
+  </div>`;
+}
+
+function renderEstadoHotel(){
+  const cont=document.getElementById('estado-contenido');
+  if(!cont)return;
+  const fecha=fechaEstadoSeleccionada();
+
+  let libres=0,ocupadas=0;
+  HABS.forEach(h=>{ if(habInfoEnFecha(h.num,fecha))ocupadas++; else libres++; });
+  document.getElementById('estado-libres').textContent=libres;
+  document.getElementById('estado-ocupadas').textContent=ocupadas;
+
+  if(subvistaEstadoActual==='numero'){
+    const ordenadas=[...HABS].sort((a,b)=>parseInt(a.num)-parseInt(b.num));
+    cont.innerHTML=`<div class="card"><div class="hab-grid">${ordenadas.map(h=>tarjetaEstadoHTML(h)).join('')}</div></div>`;
+  } else {
+    cont.innerHTML=`<div class="card">${HAB_GRUPOS.map(g=>{
+      const habsDelGrupo=HABS.filter(h=>g.tipos.includes(h.tipo)).sort((a,b)=>parseInt(a.num)-parseInt(b.num));
+      if(!habsDelGrupo.length)return'';
+      return `<div class="hab-group">
+        <div class="hab-group-title">${g.label}</div>
+        <div class="hab-grid">${habsDelGrupo.map(h=>tarjetaEstadoHTML(h)).join('')}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
 }
 
 // LLEGADAS DE HOY
