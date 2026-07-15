@@ -877,21 +877,6 @@ function habInfoEnFecha(numHab,fecha){
   return ocupante||null;
 }
 
-function tarjetaEstadoHTML(h){
-  const fecha=fechaEstadoSeleccionada();
-  const ocupante=habInfoEnFecha(h.num,fecha);
-  if(!ocupante){
-    return `<div class="hab-chip hab-free" style="min-width:90px">${h.num}<div class="hab-tipo">Libre</div></div>`;
-  }
-  const salidaTxt=ocupante.salida?fmt(ocupante.salida):'Sin fecha definida';
-  const nombreShow=isLoggedIn?(ocupante.nombre||'Sin nombre'):'Ocupada';
-  return `<div class="hab-chip hab-occ" style="min-width:120px;cursor:pointer" onclick="verRes('${ocupante.id}')">
-    <div style="font-weight:700">${h.num}</div>
-    <div class="hab-tipo" style="font-weight:600">${nombreShow}</div>
-    ${isLoggedIn?`<div class="hab-tipo" style="font-size:10px">Sale: ${salidaTxt}</div>`:''}
-  </div>`;
-}
-
 function renderEstadoHotel(){
   const cont=document.getElementById('estado-contenido');
   if(!cont)return;
@@ -904,14 +889,14 @@ function renderEstadoHotel(){
 
   if(subvistaEstadoActual==='numero'){
     const ordenadas=[...HABS].sort((a,b)=>parseInt(a.num)-parseInt(b.num));
-    cont.innerHTML=`<div class="card"><div class="hab-grid">${ordenadas.map(h=>tarjetaEstadoHTML(h)).join('')}</div></div>`;
+    cont.innerHTML=`<div class="card"><div class="hab-grid">${ordenadas.map(h=>tarjetaHabGenerica(h,fecha)).join('')}</div></div>`;
   } else {
     cont.innerHTML=`<div class="card">${HAB_GRUPOS.map(g=>{
       const habsDelGrupo=HABS.filter(h=>g.tipos.includes(h.tipo)).sort((a,b)=>parseInt(a.num)-parseInt(b.num));
       if(!habsDelGrupo.length)return'';
       return `<div class="hab-group">
         <div class="hab-group-title">${g.label}</div>
-        <div class="hab-grid">${habsDelGrupo.map(h=>tarjetaEstadoHTML(h)).join('')}</div>
+        <div class="hab-grid">${habsDelGrupo.map(h=>tarjetaHabGenerica(h,fecha)).join('')}</div>
       </div>`;
     }).join('')}</div>`;
   }
@@ -1092,6 +1077,65 @@ function resDelDia(ds){
   });
 }
 
+// ============ FUNCIÓN ÚNICA PARA TARJETAS DE HABITACIÓN (calendario + estado del hotel) ============
+function tarjetaHabGenerica(h, fecha){
+  const ocupante=habInfoEnFecha(h.num,fecha);
+
+  if(ocupante){
+    const salidaTxt=ocupante.salida?fmt(ocupante.salida):'Sin fecha definida';
+    const nombreShow=isLoggedIn?(ocupante.nombre||'Sin nombre'):'Ocupada';
+    return `<div class="hab-chip hab-occ" style="cursor:pointer" onclick="verRes('${ocupante.id}')" title="Ver reserva">
+      <div style="font-weight:700">${h.num}</div>
+      <div class="hab-tipo" style="font-weight:600">${nombreShow}</div>
+      ${isLoggedIn?`<div class="hab-tipo" style="font-size:10px">Sale: ${salidaTxt}</div>` : ''}
+      ${isLoggedIn?`<button class="foto-btn" style="margin-top:4px;font-size:10px;padding:2px 6px;background:#fff" onclick="event.stopPropagation();marcarSalidaHoy('${ocupante.id}')">Marcar salida</button>` : ''}
+    </div>`;
+  }
+
+  // Libre — pero revisar si alguien sale justo ese día (para marcarlo en ámbar)
+  const queSaleEseDia=reservas.find(r=>r.hab===h.num && r.salida===fecha);
+  if(queSaleEseDia){
+    const nombreShow=isLoggedIn?(queSaleEseDia.nombre||'Sin nombre'):'Sale hoy';
+    const clickHandler=isLoggedIn?`onclick="oResDesdeEstado('${h.num}','${fecha}')" style="cursor:pointer"`:'';
+    return `<div class="hab-chip" style="background:#fffbeb;border-color:#fde68a;color:#92400e" ${clickHandler} title="Sale este día">
+      <div style="font-weight:700">${h.num}</div>
+      <div class="hab-tipo" style="font-weight:600">Sale hoy</div>
+      ${isLoggedIn?`<div class="hab-tipo" style="font-size:10px">${nombreShow}</div>`:''}
+    </div>`;
+  }
+
+  if(isLoggedIn){
+    return `<div class="hab-chip hab-free" style="cursor:pointer" onclick="oResDesdeEstado('${h.num}','${fecha}')" title="Reservar ${h.num}">
+      ${h.num}<div class="hab-tipo">+ Reservar</div></div>`;
+  }
+  return `<div class="hab-chip hab-free">${h.num}<div class="hab-tipo">Libre</div></div>`;
+}
+
+function oResDesdeEstado(numHab,fecha){
+  if(!isLoggedIn){toast('Inicia sesión para editar');return}
+  oRes(null);
+  document.getElementById('f-llegada').value=fecha;
+  habsMultiSel=[numHab];
+  const hab=HABS.find(h=>h.num===numHab);
+  habsMultiTarifas[numHab]=hab?hab.tarifa:0;
+  renderHabChipsPicker();
+}
+
+async function marcarSalidaHoy(resId){
+  const r=reservas.find(x=>x.id===resId);
+  if(!r)return;
+  if(!confirm(`¿Marcar la habitación ${r.hab} como desocupada hoy (${fmt(today)})?`))return;
+  r.salida=today;
+  localStorage.setItem('hr_reservas',JSON.stringify(reservas));
+  renderAll();
+  try{
+    await apiP({action:'saveReserva',data:r});
+    toast('Salida registrada ✓');
+  }catch{
+    toast('Guardado localmente, revisa tu conexión');
+  }
+}
+
 // DAY PANEL
 function renderDayPanel(ds){
   const[y,m,d]=ds.split('-');
@@ -1102,25 +1146,14 @@ function renderDayPanel(ds){
   document.getElementById('dp-sub').textContent=`${dr.length} reserva${dr.length!==1?'s':`s`} · ${HABS.length-habsOcc.size} habitaciones libres`;
   if(isLoggedIn)document.getElementById('btn-nueva').style.display='';
 
-  // Hab grupos
+  // Hab grupos — usa la misma función que Estado del hotel
   const hg=document.getElementById('hab-grupos');
   hg.innerHTML=HAB_GRUPOS.map(g=>{
-    const habsDelGrupo=HABS.filter(h=>g.tipos.includes(h.tipo));
+    const habsDelGrupo=HABS.filter(h=>g.tipos.includes(h.tipo)).sort((a,b)=>parseInt(a.num)-parseInt(b.num));
     if(!habsDelGrupo.length)return'';
     return`<div class="hab-group">
       <div class="hab-group-title">${g.label}</div>
-      <div class="hab-grid">${habsDelGrupo.map(h=>{
-        const occ=habsOcc.has(h.num);
-        const resOcc=dr.find(r=>r.hab===h.num);
-        if(occ&&resOcc){
-          return`<div class="hab-chip hab-occ" style="cursor:pointer" onclick="verRes('${resOcc.id}')" title="Ver reserva">${h.num}<div class="hab-tipo">Ocupada</div></div>`;
-        }
-        if(isLoggedIn){
-          return`<div class="hab-chip hab-free" style="cursor:pointer" onclick="oResHab('${h.num}')" title="Reservar ${h.num}">
-            ${h.num}<div class="hab-tipo">+ Reservar</div></div>`;
-        }
-        return`<div class="hab-chip hab-free">${h.num}<div class="hab-tipo">Libre</div></div>`;
-      }).join('')}</div>
+      <div class="hab-grid">${habsDelGrupo.map(h=>tarjetaHabGenerica(h,ds)).join('')}</div>
     </div>`;
   }).join('');
 
